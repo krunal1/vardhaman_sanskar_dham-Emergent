@@ -26,16 +26,12 @@ const Home = () => {
       <header className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center">
               <img 
-                src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/d0qy8gnr_vsd%20logo.png" 
-                alt="Vardhaman Sanskar Dham Logo"
-                className="w-16 h-16 object-contain"
+                src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" 
+                alt="Vardhaman Sanskar Dham"
+                className="h-16 w-auto object-contain"
               />
-              <div>
-                <h1 className="text-2xl font-bold text-blue-900">Vardhaman Sanskar Dham</h1>
-                <p className="text-sm text-blue-600">Dombivli</p>
-              </div>
             </div>
             <nav className="hidden md:flex space-x-8">
               <a href="#home" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Home</a>
@@ -437,13 +433,12 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <div className="flex items-center space-x-3 mb-4">
+              <div className="mb-4">
                 <img 
-                  src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/d0qy8gnr_vsd%20logo.png" 
-                  alt="Vardhaman Sanskar Dham Logo"
-                  className="w-12 h-12 object-contain"
+                  src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" 
+                  alt="Vardhaman Sanskar Dham"
+                  className="h-12 w-auto object-contain mb-4"
                 />
-                <h3 className="text-xl font-bold">Vardhaman Sanskar Dham</h3>
               </div>
               <p className="text-gray-400">
                 Serving the community with compassion, spiritual values, and cultural heritage since 2009.
