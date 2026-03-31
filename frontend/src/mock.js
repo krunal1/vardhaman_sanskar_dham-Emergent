@@ -37,11 +37,11 @@ export const activities = [
 
 export const aboutData = {
   title: "About Vardhaman Sanskar Dham",
-  description: "Vardhaman Sanskar Dham is a spiritual and social service organization based in Dombivli, dedicated to fostering cultural values, compassion, and community service. Established with the vision of creating a harmonious society, we work tirelessly to spread the message of universal brotherhood and spiritual growth.",
+  description: "We are dedicated to work towards the betterment of the society. We have been active over the past two decades in various areas. Vardhaman Sanskar Dham is a spiritual and social service organization based in Dombivli, fostering cultural values, compassion, and community service. Established with the vision of creating a harmonious society, we work tirelessly to spread the message of universal brotherhood and spiritual growth.",
   mission: "To create a compassionate society rooted in spiritual values and cultural heritage, while serving humanity through various social welfare initiatives.",
   vision: "A world where every individual lives with dignity, compassion, and spiritual awareness.",
   stats: [
-    { label: "Years of Service", value: "15+" },
+    { label: "Years of Service", value: "20+" },
     { label: "Lives Touched", value: "10,000+" },
     { label: "Volunteers", value: "500+" },
     { label: "Programs Conducted", value: "1,200+" }

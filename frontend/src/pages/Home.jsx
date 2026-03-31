@@ -441,7 +441,7 @@ const Home = () => {
                 />
               </div>
               <p className="text-gray-400">
-                Serving the community with compassion, spiritual values, and cultural heritage since 2009.
+                We are dedicated to work towards the betterment of the society. Serving the community with compassion, spiritual values, and cultural heritage for over two decades.
               </p>
             </div>
             
