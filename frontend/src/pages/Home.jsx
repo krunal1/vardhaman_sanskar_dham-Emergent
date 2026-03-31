@@ -27,9 +27,11 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center">
-                <Sparkles className="w-7 h-7 text-amber-400" />
-              </div>
+              <img 
+                src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/d0qy8gnr_vsd%20logo.png" 
+                alt="Vardhaman Sanskar Dham Logo"
+                className="w-16 h-16 object-contain"
+              />
               <div>
                 <h1 className="text-2xl font-bold text-blue-900">Vardhaman Sanskar Dham</h1>
                 <p className="text-sm text-blue-600">Dombivli</p>
@@ -436,9 +438,11 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-amber-400" />
-                </div>
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/d0qy8gnr_vsd%20logo.png" 
+                  alt="Vardhaman Sanskar Dham Logo"
+                  className="w-12 h-12 object-contain"
+                />
                 <h3 className="text-xl font-bold">Vardhaman Sanskar Dham</h3>
               </div>
               <p className="text-gray-400">
