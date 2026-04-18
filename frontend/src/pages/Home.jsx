@@ -156,43 +156,40 @@ const Home = () => {
       </section>
 
       {/* Activities Section */}
-      <section id="activities" className="py-20 px-4 bg-white">
+      <section id="activities" className="py-16 px-4 bg-gradient-to-br from-blue-50 to-slate-100">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-100 text-blue-800 px-4 py-1">Our Work</Badge>
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-blue-100 text-blue-800 px-4 py-1 border-0">Our Work</Badge>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Activities</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover the various ways we serve our community and promote spiritual growth
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Discover the various ways we serve our community
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {activities.map((activity) => {
               const IconComponent = iconMap[activity.icon];
               return (
-                <Card key={activity.id} className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-blue-200 overflow-hidden">
-                  <div className="relative h-64 overflow-hidden">
+                <Card key={activity._id} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-200 overflow-hidden">
+                  <div className="relative h-48 overflow-hidden">
                     <img 
                       src={activity.image} 
                       alt={activity.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent"></div>
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center">
-                          <IconComponent className="w-6 h-6" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a3a6b]/80 to-transparent"></div>
+                    <div className="absolute bottom-3 left-3 text-white">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-10 h-10 bg-[#d97706] rounded-full flex items-center justify-center">
+                          <IconComponent className="w-5 h-5" />
                         </div>
-                        <h3 className="text-2xl font-bold">{activity.title}</h3>
+                        <h3 className="text-xl font-bold">{activity.title}</h3>
                       </div>
-                      <p className="text-blue-100 font-medium">{activity.subtitle}</p>
+                      <p className="text-blue-100 text-sm font-medium">{activity.subtitle}</p>
                     </div>
                   </div>
-                  <CardContent className="p-6">
-                    <p className="text-gray-600 leading-relaxed">{activity.description}</p>
-                    <Button variant="link" className="mt-4 text-blue-600 p-0 font-semibold">
-                      Learn More →
-                    </Button>
+                  <CardContent className="p-5">
+                    <p className="text-gray-600 leading-relaxed text-sm">{activity.description}</p>
                   </CardContent>
                 </Card>
               );
@@ -202,81 +199,83 @@ const Home = () => {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 px-4 bg-gradient-to-br from-blue-50 to-amber-50">
+      <section id="about" className="py-16 px-4 bg-[#1a3a6b] text-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <Badge className="mb-4 bg-blue-100 text-blue-800 px-4 py-1">About Us</Badge>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">{aboutData.title}</h2>
-              <p className="text-lg text-gray-700 mb-6 leading-relaxed">{aboutData.description}</p>
-              
-              <div className="space-y-6">
-                <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-600">
-                  <h3 className="text-xl font-bold text-blue-900 mb-2">Our Mission</h3>
-                  <p className="text-gray-700">{aboutData.mission}</p>
-                </div>
+          {aboutData && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+              <div>
+                <Badge className="mb-4 bg-[#d97706] text-white px-4 py-1 border-0">About Us</Badge>
+                <h2 className="text-4xl font-bold mb-4">{aboutData.title}</h2>
+                <p className="text-lg text-blue-100 mb-6 leading-relaxed">{aboutData.description}</p>
                 
-                <div className="bg-white p-6 rounded-lg shadow-md border-l-4 border-amber-500">
-                  <h3 className="text-xl font-bold text-amber-700 mb-2">Our Vision</h3>
-                  <p className="text-gray-700">{aboutData.vision}</p>
+                <div className="space-y-4">
+                  <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border-l-4 border-[#d97706]">
+                    <h3 className="text-lg font-bold text-[#fbbf24] mb-2">Our Mission</h3>
+                    <p className="text-blue-100 text-sm">{aboutData.mission}</p>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg border-l-4 border-[#fbbf24]">
+                    <h3 className="text-lg font-bold text-[#fbbf24] mb-2">Our Vision</h3>
+                    <p className="text-blue-100 text-sm">{aboutData.vision}</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-6">
-              {aboutData.stats.map((stat, index) => (
-                <Card key={index} className="text-center p-8 bg-white hover:shadow-xl transition-shadow border-2 hover:border-blue-200">
-                  <CardContent className="p-0">
-                    <div className="text-4xl font-bold text-blue-600 mb-2">{stat.value}</div>
-                    <div className="text-gray-600 font-medium">{stat.label}</div>
-                  </CardContent>
-                </Card>
-              ))}
+              <div className="grid grid-cols-2 gap-4">
+                {aboutData.stats.map((stat, index) => (
+                  <Card key={index} className="text-center p-6 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 transition-all">
+                    <CardContent className="p-0">
+                      <div className="text-4xl font-bold text-[#fbbf24] mb-2">{stat.value}</div>
+                      <div className="text-blue-100 font-medium text-sm">{stat.label}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
       {/* Events Section */}
-      <section id="events" className="py-20 px-4 bg-white">
+      <section id="events" className="py-16 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-amber-100 text-amber-800 px-4 py-1">What's Happening</Badge>
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-amber-100 text-amber-800 px-4 py-1 border-0">What's Happening</Badge>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Upcoming Events</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Join us in our upcoming programs and be part of our mission
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Join us in our upcoming programs
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {events.map((event) => (
-              <Card key={event.id} className={`hover:shadow-xl transition-shadow border-2 ${event.status === 'upcoming' ? 'border-blue-200' : 'border-gray-200 opacity-75'}`}>
-                <CardHeader>
+              <Card key={event._id} className={`hover:shadow-xl transition-shadow border-2 ${event.status === 'upcoming' ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200 opacity-75'}`}>
+                <CardHeader className="pb-3">
                   <div className="flex items-start justify-between mb-2">
-                    <Badge className={event.status === 'upcoming' ? 'bg-green-500' : 'bg-gray-400'}>
+                    <Badge className={event.status === 'upcoming' ? 'bg-green-500 border-0' : 'bg-gray-400 border-0'}>
                       {event.status === 'upcoming' ? 'Upcoming' : 'Completed'}
                     </Badge>
                   </div>
-                  <CardTitle className="text-2xl text-gray-900">{event.title}</CardTitle>
+                  <CardTitle className="text-xl text-gray-900">{event.title}</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center text-gray-600">
-                      <Calendar className="w-5 h-5 mr-3 text-blue-600" />
+                <CardContent className="pt-0">
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-gray-600 text-sm">
+                      <Calendar className="w-4 h-4 mr-2 text-[#1a3a6b]" />
                       <span>{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <Clock className="w-5 h-5 mr-3 text-blue-600" />
+                    <div className="flex items-center text-gray-600 text-sm">
+                      <Clock className="w-4 h-4 mr-2 text-[#1a3a6b]" />
                       <span>{event.time}</span>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <MapPin className="w-5 h-5 mr-3 text-blue-600" />
+                    <div className="flex items-start text-gray-600 text-sm">
+                      <MapPin className="w-4 h-4 mr-2 text-[#1a3a6b] flex-shrink-0 mt-0.5" />
                       <span className="text-sm">{event.location}</span>
                     </div>
                   </div>
-                  <p className="text-gray-600 mb-4">{event.description}</p>
+                  <p className="text-gray-600 text-sm mb-4">{event.description}</p>
                   {event.status === 'upcoming' && (
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                    <Button className="w-full bg-[#1a3a6b] hover:bg-[#0f2244] text-white font-semibold">
                       Register Now
                     </Button>
                   )}
@@ -288,55 +287,59 @@ const Home = () => {
       </section>
 
       {/* Gallery Section */}
-      <section id="gallery" className="py-20 px-4 bg-gray-50">
+      <section id="gallery" className="py-16 px-4 bg-slate-100">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <Badge className="mb-4 bg-blue-100 text-blue-800 px-4 py-1">Memories</Badge>
+          <div className="text-center mb-10">
+            <Badge className="mb-4 bg-blue-100 text-blue-800 px-4 py-1 border-0">Memories</Badge>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Photo Gallery</h2>
-            <p className="text-xl text-gray-600 mb-8">Glimpses of our activities and events</p>
+            <p className="text-lg text-gray-600 mb-6">Glimpses of our activities and events</p>
             
-            <div className="flex justify-center gap-4 flex-wrap">
+            <div className="flex justify-center gap-3 flex-wrap">
               <Button 
                 variant={selectedCategory === 'all' ? 'default' : 'outline'}
                 onClick={() => setSelectedCategory('all')}
-                className={selectedCategory === 'all' ? 'bg-blue-600' : ''}
+                className={selectedCategory === 'all' ? 'bg-[#1a3a6b]' : ''}
+                size="sm"
               >
                 All
               </Button>
               <Button 
                 variant={selectedCategory === 'bhakti' ? 'default' : 'outline'}
                 onClick={() => setSelectedCategory('bhakti')}
-                className={selectedCategory === 'bhakti' ? 'bg-blue-600' : ''}
+                className={selectedCategory === 'bhakti' ? 'bg-[#1a3a6b]' : ''}
+                size="sm"
               >
                 Spiritual
               </Button>
               <Button 
                 variant={selectedCategory === 'service' ? 'default' : 'outline'}
                 onClick={() => setSelectedCategory('service')}
-                className={selectedCategory === 'service' ? 'bg-blue-600' : ''}
+                className={selectedCategory === 'service' ? 'bg-[#1a3a6b]' : ''}
+                size="sm"
               >
                 Service
               </Button>
               <Button 
                 variant={selectedCategory === 'education' ? 'default' : 'outline'}
                 onClick={() => setSelectedCategory('education')}
-                className={selectedCategory === 'education' ? 'bg-blue-600' : ''}
+                className={selectedCategory === 'education' ? 'bg-[#1a3a6b]' : ''}
+                size="sm"
               >
                 Education
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredImages.map((image) => (
-              <div key={image.id} className="group relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3]">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+            {filteredImages.slice(0, 6).map((image) => (
+              <div key={image._id} className="group relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3]">
                 <img 
                   src={image.url} 
                   alt={image.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-                  <p className="text-white font-semibold text-lg p-4">{image.title}</p>
+                  <p className="text-white font-semibold text-base p-3">{image.title}</p>
                 </div>
               </div>
             ))}
@@ -345,29 +348,29 @@ const Home = () => {
       </section>
 
       {/* Donation Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-[#0f2244] to-[#1a3a6b] text-white">
+      <section className="py-16 px-4 bg-gradient-to-r from-[#0f2244] to-[#1a3a6b] text-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6">Support Our Mission</h2>
-          <p className="text-xl mb-12 text-blue-100">
-            Your generous contribution helps us continue our social and spiritual work in the community
+          <h2 className="text-4xl font-bold mb-4">Support Our Mission</h2>
+          <p className="text-lg mb-10 text-blue-100">
+            Your generous contribution helps us continue our work
           </p>
           
           {donationInfo && (
             <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
               <CardHeader>
                 <CardTitle className="text-2xl text-white">Donation Details</CardTitle>
-                <CardDescription className="text-blue-100">You can contribute through bank transfer or UPI</CardDescription>
+                <CardDescription className="text-blue-100">Contribute via bank transfer or UPI</CardDescription>
               </CardHeader>
-              <CardContent className="text-left space-y-4">
-                <div>
-                  <p className="text-sm text-blue-200 mb-1">Bank Name</p>
-                  <p className="font-semibold text-lg">{donationInfo.bankName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-blue-200 mb-1">Account Name</p>
-                  <p className="font-semibold text-lg">{donationInfo.accountName}</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="text-left space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-blue-200 mb-1">Bank</p>
+                    <p className="font-semibold">{donationInfo.bankName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-200 mb-1">Account Name</p>
+                    <p className="font-semibold">{donationInfo.accountName}</p>
+                  </div>
                   <div>
                     <p className="text-sm text-blue-200 mb-1">Account Number</p>
                     <p className="font-semibold">{donationInfo.accountNumber}</p>
@@ -382,7 +385,7 @@ const Home = () => {
                   <p className="text-sm text-blue-200 mb-1">UPI ID</p>
                   <p className="font-semibold text-lg">{donationInfo.upiId}</p>
                 </div>
-                <Button className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-6 text-lg mt-6 border-0">
+                <Button className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-5 text-lg mt-4 border-0">
                   Donate Now
                 </Button>
               </CardContent>
@@ -522,47 +525,10 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <div className="mb-4">
-                <img 
-                  src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" 
-                  alt="Vardhaman Sanskar Dham"
-                  className="h-12 w-auto object-contain mb-4"
-                />
-              </div>
-              <p className="text-gray-400">
-                We are dedicated to work towards the betterment of the society. Serving the community with compassion, spiritual values, and cultural heritage for over two decades.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-bold mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#home" className="hover:text-white transition-colors">Home</a></li>
-                <li><a href="#activities" className="hover:text-white transition-colors">Activities</a></li>
-                <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#events" className="hover:text-white transition-colors">Events</a></li>
-                <li><a href="#gallery" className="hover:text-white transition-colors">Gallery</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-bold mb-4">Connect With Us</h4>
-              <p className="text-gray-400 mb-2">{contactData.phone}</p>
-              <p className="text-gray-400 mb-4">{contactData.email}</p>
-              <p className="text-gray-400 text-sm">{contactData.address}</p>
-            </div>
-          </div>
-          
-          <Separator className="bg-gray-700 mb-8" />
-          
-          <div className="text-center text-gray-400">
-            <p>&copy; {new Date().getFullYear()} Vardhaman Sanskar Dham. All rights reserved.</p>
-          </div>
+      {/* Simple Footer */}
+      <footer className="bg-gray-900 text-white py-8 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <p className="text-gray-400">&copy; {new Date().getFullYear()} Vardhaman Sanskar Dham. All rights reserved.</p>
         </div>
       </footer>
     </div>
