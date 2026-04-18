@@ -1,0 +1,819 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import {
+  LogOut, Activity, Info, Calendar, Image, Phone, CreditCard,
+  Plus, Edit, Trash2, Save
+} from 'lucide-react';
+import { toast } from 'sonner';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
+const AdminDashboard = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('activities');
+  
+  // State for all content
+  const [activities, setActivities] = useState([]);
+  const [about, setAbout] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [gallery, setGallery] = useState([]);
+  const [contact, setContact] = useState(null);
+  const [donation, setDonation] = useState(null);
+  
+  const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState({});
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/admin/login');
+    } else {
+      fetchAllData();
+    }
+  }, [user, navigate]);
+
+  const api = axios.create({
+    baseURL: BACKEND_URL,
+    withCredentials: true
+  });
+
+  const fetchAllData = async () => {
+    try {
+      const [activitiesRes, aboutRes, eventsRes, galleryRes, contactRes, donationRes] = await Promise.all([
+        api.get('/api/activities'),
+        api.get('/api/about'),
+        api.get('/api/events'),
+        api.get('/api/gallery'),
+        api.get('/api/contact'),
+        api.get('/api/donation')
+      ]);
+      
+      setActivities(activitiesRes.data || []);
+      setAbout(aboutRes.data);
+      setEvents(eventsRes.data || []);
+      setGallery(galleryRes.data || []);
+      setContact(contactRes.data);
+      setDonation(donationRes.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Failed to load data');
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/admin/login');
+  };
+
+  // Activities handlers
+  const saveActivity = async (activity, index) => {
+    try {
+      if (activity._id) {
+        await api.put(`/api/activities/${activity._id}`, activity);
+        toast.success('Activity updated successfully');
+      } else {
+        const { data } = await api.post('/api/activities', activity);
+        const newActivities = [...activities];
+        newActivities[index] = { ...activity, _id: data.id };
+        setActivities(newActivities);
+        toast.success('Activity created successfully');
+      }
+      setEditMode({ ...editMode, [`activity-${index}`]: false });
+      fetchAllData();
+    } catch (error) {
+      toast.error('Failed to save activity');
+    }
+  };
+
+  const deleteActivity = async (id, index) => {
+    if (!window.confirm('Are you sure you want to delete this activity?')) return;
+    
+    try {
+      await api.delete(`/api/activities/${id}`);
+      setActivities(activities.filter((_, i) => i !== index));
+      toast.success('Activity deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete activity');
+    }
+  };
+
+  const addActivity = () => {
+    setActivities([...activities, {
+      title: '',
+      subtitle: '',
+      description: '',
+      icon: 'Heart',
+      image: ''
+    }]);
+    setEditMode({ ...editMode, [`activity-${activities.length}`]: true });
+  };
+
+  // Events handlers
+  const saveEvent = async (event, index) => {
+    try {
+      if (event._id) {
+        await api.put(`/api/events/${event._id}`, event);
+        toast.success('Event updated successfully');
+      } else {
+        const { data } = await api.post('/api/events', event);
+        const newEvents = [...events];
+        newEvents[index] = { ...event, _id: data.id };
+        setEvents(newEvents);
+        toast.success('Event created successfully');
+      }
+      setEditMode({ ...editMode, [`event-${index}`]: false });
+      fetchAllData();
+    } catch (error) {
+      toast.error('Failed to save event');
+    }
+  };
+
+  const deleteEvent = async (id, index) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
+    
+    try {
+      await api.delete(`/api/events/${id}`);
+      setEvents(events.filter((_, i) => i !== index));
+      toast.success('Event deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete event');
+    }
+  };
+
+  const addEvent = () => {
+    setEvents([...events, {
+      title: '',
+      date: '',
+      time: '',
+      location: '',
+      description: '',
+      status: 'upcoming'
+    }]);
+    setEditMode({ ...editMode, [`event-${events.length}`]: true });
+  };
+
+  // Gallery handlers
+  const addGalleryImage = async () => {
+    const url = prompt('Enter image URL:');
+    const title = prompt('Enter image title:');
+    const category = prompt('Enter category (bhakti/service/education):');
+    
+    if (url && title && category) {
+      try {
+        await api.post('/api/gallery', { url, title, category });
+        toast.success('Image added successfully');
+        fetchAllData();
+      } catch (error) {
+        toast.error('Failed to add image');
+      }
+    }
+  };
+
+  const deleteGalleryImage = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this image?')) return;
+    
+    try {
+      await api.delete(`/api/gallery/${id}`);
+      toast.success('Image deleted successfully');
+      fetchAllData();
+    } catch (error) {
+      toast.error('Failed to delete image');
+    }
+  };
+
+  // About handlers
+  const saveAbout = async () => {
+    try {
+      await api.put('/api/about', about);
+      toast.success('About section updated successfully');
+      setEditMode({ ...editMode, about: false });
+    } catch (error) {
+      toast.error('Failed to update about section');
+    }
+  };
+
+  // Contact handlers
+  const saveContact = async () => {
+    try {
+      await api.put('/api/contact', contact);
+      toast.success('Contact information updated successfully');
+      setEditMode({ ...editMode, contact: false });
+    } catch (error) {
+      toast.error('Failed to update contact information');
+    }
+  };
+
+  // Donation handlers
+  const saveDonation = async () => {
+    try {
+      await api.put('/api/donation', donation);
+      toast.success('Donation details updated successfully');
+      setEditMode({ ...editMode, donation: false });
+    } catch (error) {
+      toast.error('Failed to update donation details');
+    }
+  };
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      {/* Header */}
+      <header className="bg-[#1a3a6b] text-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+              <p className="text-blue-200 text-sm">Welcome, {user.email}</p>
+            </div>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="bg-white/10 hover:bg-white/20 text-white border-white/30"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid grid-cols-6 gap-2 bg-white p-2 rounded-lg shadow">
+            <TabsTrigger value="activities" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <Activity className="w-4 h-4 mr-2" />
+              Activities
+            </TabsTrigger>
+            <TabsTrigger value="about" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <Info className="w-4 h-4 mr-2" />
+              About
+            </TabsTrigger>
+            <TabsTrigger value="events" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <Calendar className="w-4 h-4 mr-2" />
+              Events
+            </TabsTrigger>
+            <TabsTrigger value="gallery" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <Image className="w-4 h-4 mr-2" />
+              Gallery
+            </TabsTrigger>
+            <TabsTrigger value="contact" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <Phone className="w-4 h-4 mr-2" />
+              Contact
+            </TabsTrigger>
+            <TabsTrigger value="donation" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Donation
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Activities Tab */}
+          <TabsContent value="activities" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Activities</h2>
+              <Button onClick={addActivity} className="bg-[#d97706] hover:bg-[#b45309]">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Activity
+              </Button>
+            </div>
+
+            <div className="grid gap-4">
+              {activities.map((activity, index) => (
+                <Card key={index} className="border-2 border-blue-100">
+                  <CardContent className="p-6">
+                    {editMode[`activity-${index}`] ? (
+                      <div className="space-y-4">
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Title"
+                          value={activity.title}
+                          onChange={(e) => {
+                            const newActivities = [...activities];
+                            newActivities[index].title = e.target.value;
+                            setActivities(newActivities);
+                          }}
+                        />
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Subtitle"
+                          value={activity.subtitle}
+                          onChange={(e) => {
+                            const newActivities = [...activities];
+                            newActivities[index].subtitle = e.target.value;
+                            setActivities(newActivities);
+                          }}
+                        />
+                        <textarea
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Description"
+                          rows="4"
+                          value={activity.description}
+                          onChange={(e) => {
+                            const newActivities = [...activities];
+                            newActivities[index].description = e.target.value;
+                            setActivities(newActivities);
+                          }}
+                        />
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Icon (Heart, HandHeart, Sparkles, GraduationCap)"
+                          value={activity.icon}
+                          onChange={(e) => {
+                            const newActivities = [...activities];
+                            newActivities[index].icon = e.target.value;
+                            setActivities(newActivities);
+                          }}
+                        />
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Image URL"
+                          value={activity.image}
+                          onChange={(e) => {
+                            const newActivities = [...activities];
+                            newActivities[index].image = e.target.value;
+                            setActivities(newActivities);
+                          }}
+                        />
+                        <div className="flex gap-2">
+                          <Button onClick={() => saveActivity(activity, index)} className="bg-green-600 hover:bg-green-700">
+                            <Save className="w-4 h-4 mr-2" />
+                            Save
+                          </Button>
+                          <Button
+                            onClick={() => setEditMode({ ...editMode, [`activity-${index}`]: false })}
+                            variant="outline"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xl font-bold">{activity.title}</h3>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => setEditMode({ ...editMode, [`activity-${index}`]: true })}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            {activity._id && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => deleteActivity(activity._id, index)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-gray-600 mb-2">{activity.subtitle}</p>
+                        <p className="text-sm text-gray-500">{activity.description}</p>
+                        {activity.image && (
+                          <img src={activity.image} alt={activity.title} className="mt-4 h-32 object-cover rounded-lg" />
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* About Tab */}
+          <TabsContent value="about" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage About Section</h2>
+              {!editMode.about ? (
+                <Button onClick={() => setEditMode({ ...editMode, about: true })} className="bg-[#1a3a6b]">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button onClick={saveAbout} className="bg-green-600 hover:bg-green-700">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button onClick={() => setEditMode({ ...editMode, about: false })} variant="outline">
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {about && (
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  {editMode.about ? (
+                    <>
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Title"
+                        value={about.title}
+                        onChange={(e) => setAbout({ ...about, title: e.target.value })}
+                      />
+                      <textarea
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Description"
+                        rows="4"
+                        value={about.description}
+                        onChange={(e) => setAbout({ ...about, description: e.target.value })}
+                      />
+                      <textarea
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Mission"
+                        rows="3"
+                        value={about.mission}
+                        onChange={(e) => setAbout({ ...about, mission: e.target.value })}
+                      />
+                      <textarea
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Vision"
+                        rows="3"
+                        value={about.vision}
+                        onChange={(e) => setAbout({ ...about, vision: e.target.value })}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-bold">{about.title}</h3>
+                      <p className="text-gray-700">{about.description}</p>
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div className="p-4 bg-blue-50 rounded-lg">
+                          <h4 className="font-semibold text-[#1a3a6b] mb-2">Mission</h4>
+                          <p className="text-sm">{about.mission}</p>
+                        </div>
+                        <div className="p-4 bg-amber-50 rounded-lg">
+                          <h4 className="font-semibold text-[#d97706] mb-2">Vision</h4>
+                          <p className="text-sm">{about.vision}</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Events Tab */}
+          <TabsContent value="events" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Events</h2>
+              <Button onClick={addEvent} className="bg-[#d97706] hover:bg-[#b45309]">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Event
+              </Button>
+            </div>
+
+            <div className="grid gap-4">
+              {events.map((event, index) => (
+                <Card key={index} className="border-2 border-blue-100">
+                  <CardContent className="p-6">
+                    {editMode[`event-${index}`] ? (
+                      <div className="space-y-4">
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Event Title"
+                          value={event.title}
+                          onChange={(e) => {
+                            const newEvents = [...events];
+                            newEvents[index].title = e.target.value;
+                            setEvents(newEvents);
+                          }}
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            type="date"
+                            className="w-full px-4 py-2 border rounded-lg"
+                            value={event.date}
+                            onChange={(e) => {
+                              const newEvents = [...events];
+                              newEvents[index].date = e.target.value;
+                              setEvents(newEvents);
+                            }}
+                          />
+                          <input
+                            className="w-full px-4 py-2 border rounded-lg"
+                            placeholder="Time"
+                            value={event.time}
+                            onChange={(e) => {
+                              const newEvents = [...events];
+                              newEvents[index].time = e.target.value;
+                              setEvents(newEvents);
+                            }}
+                          />
+                        </div>
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Location"
+                          value={event.location}
+                          onChange={(e) => {
+                            const newEvents = [...events];
+                            newEvents[index].location = e.target.value;
+                            setEvents(newEvents);
+                          }}
+                        />
+                        <textarea
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Description"
+                          rows="3"
+                          value={event.description}
+                          onChange={(e) => {
+                            const newEvents = [...events];
+                            newEvents[index].description = e.target.value;
+                            setEvents(newEvents);
+                          }}
+                        />
+                        <select
+                          className="w-full px-4 py-2 border rounded-lg"
+                          value={event.status}
+                          onChange={(e) => {
+                            const newEvents = [...events];
+                            newEvents[index].status = e.target.value;
+                            setEvents(newEvents);
+                          }}
+                        >
+                          <option value="upcoming">Upcoming</option>
+                          <option value="completed">Completed</option>
+                        </select>
+                        <div className="flex gap-2">
+                          <Button onClick={() => saveEvent(event, index)} className="bg-green-600 hover:bg-green-700">
+                            <Save className="w-4 h-4 mr-2" />
+                            Save
+                          </Button>
+                          <Button
+                            onClick={() => setEditMode({ ...editMode, [`event-${index}`]: false })}
+                            variant="outline"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold">{event.title}</h3>
+                            <p className="text-sm text-gray-500">{event.date} | {event.time}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => setEditMode({ ...editMode, [`event-${index}`]: true })}
+                              className="bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            {event._id && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => deleteEvent(event._id, index)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-gray-600 mb-2">{event.location}</p>
+                        <p className="text-sm text-gray-500">{event.description}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Gallery Tab */}
+          <TabsContent value="gallery" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Gallery</h2>
+              <Button onClick={addGalleryImage} className="bg-[#d97706] hover:bg-[#b45309]">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Image
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {gallery.map((image, index) => (
+                <Card key={index} className="group relative overflow-hidden">
+                  <img src={image.url} alt={image.title} className="w-full h-48 object-cover" />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteGalleryImage(image._id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="p-3">
+                    <p className="font-semibold text-sm">{image.title}</p>
+                    <p className="text-xs text-gray-500">{image.category}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* Contact Tab */}
+          <TabsContent value="contact" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Contact Information</h2>
+              {!editMode.contact ? (
+                <Button onClick={() => setEditMode({ ...editMode, contact: true })} className="bg-[#1a3a6b]">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button onClick={saveContact} className="bg-green-600 hover:bg-green-700">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button onClick={() => setEditMode({ ...editMode, contact: false })} variant="outline">
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {contact && (
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  {editMode.contact ? (
+                    <>
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Contact Person Name"
+                        value={contact.name}
+                        onChange={(e) => setContact({ ...contact, name: e.target.value })}
+                      />
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Phone"
+                        value={contact.phone}
+                        onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+                      />
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Email"
+                        value={contact.email}
+                        onChange={(e) => setContact({ ...contact, email: e.target.value })}
+                      />
+                      <textarea
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Address"
+                        rows="3"
+                        value={contact.address}
+                        onChange={(e) => setContact({ ...contact, address: e.target.value })}
+                      />
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Timing"
+                        value={contact.timing}
+                        onChange={(e) => setContact({ ...contact, timing: e.target.value })}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="font-semibold text-gray-700">Contact Person</label>
+                          <p>{contact.name}</p>
+                        </div>
+                        <div>
+                          <label className="font-semibold text-gray-700">Phone</label>
+                          <p>{contact.phone}</p>
+                        </div>
+                        <div>
+                          <label className="font-semibold text-gray-700">Email</label>
+                          <p>{contact.email}</p>
+                        </div>
+                        <div>
+                          <label className="font-semibold text-gray-700">Timing</label>
+                          <p>{contact.timing}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <label className="font-semibold text-gray-700">Address</label>
+                          <p>{contact.address}</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Donation Tab */}
+          <TabsContent value="donation" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Donation Details</h2>
+              {!editMode.donation ? (
+                <Button onClick={() => setEditMode({ ...editMode, donation: true })} className="bg-[#1a3a6b]">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button onClick={saveDonation} className="bg-green-600 hover:bg-green-700">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </Button>
+                  <Button onClick={() => setEditMode({ ...editMode, donation: false })} variant="outline">
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {donation && (
+              <Card>
+                <CardContent className="p-6 space-y-4">
+                  {editMode.donation ? (
+                    <>
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Bank Name"
+                        value={donation.bankName}
+                        onChange={(e) => setDonation({ ...donation, bankName: e.target.value })}
+                      />
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Account Name"
+                        value={donation.accountName}
+                        onChange={(e) => setDonation({ ...donation, accountName: e.target.value })}
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Account Number"
+                          value={donation.accountNumber}
+                          onChange={(e) => setDonation({ ...donation, accountNumber: e.target.value })}
+                        />
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="IFSC Code"
+                          value={donation.ifscCode}
+                          onChange={(e) => setDonation({ ...donation, ifscCode: e.target.value })}
+                        />
+                      </div>
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="UPI ID"
+                        value={donation.upiId}
+                        onChange={(e) => setDonation({ ...donation, upiId: e.target.value })}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="font-semibold text-gray-700">Bank Name</label>
+                          <p>{donation.bankName}</p>
+                        </div>
+                        <div>
+                          <label className="font-semibold text-gray-700">Account Name</label>
+                          <p>{donation.accountName}</p>
+                        </div>
+                        <div>
+                          <label className="font-semibold text-gray-700">Account Number</label>
+                          <p>{donation.accountNumber}</p>
+                        </div>
+                        <div>
+                          <label className="font-semibold text-gray-700">IFSC Code</label>
+                          <p>{donation.ifscCode}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <label className="font-semibold text-gray-700">UPI ID</label>
+                          <p>{donation.upiId}</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+};
+
+export default AdminDashboard;

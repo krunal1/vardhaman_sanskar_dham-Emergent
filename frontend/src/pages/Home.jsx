@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, HandHeart, Sparkles, GraduationCap, Calendar, MapPin, Clock, Mail, Phone, MapPinned, ChevronDown } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
-import { activities, aboutData, events, galleryImages, contactData, donationInfo } from '../mock';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const iconMap = {
   Heart: Heart,
@@ -15,10 +17,53 @@ const iconMap = {
 
 const Home = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [activities, setActivities] = useState([]);
+  const [aboutData, setAboutData] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [contactData, setContactData] = useState(null);
+  const [donationInfo, setDonationInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [activitiesRes, aboutRes, eventsRes, galleryRes, contactRes, donationRes] = await Promise.all([
+        axios.get(`${BACKEND_URL}/api/activities`),
+        axios.get(`${BACKEND_URL}/api/about`),
+        axios.get(`${BACKEND_URL}/api/events`),
+        axios.get(`${BACKEND_URL}/api/gallery`),
+        axios.get(`${BACKEND_URL}/api/contact`),
+        axios.get(`${BACKEND_URL}/api/donation`)
+      ]);
+
+      setActivities(activitiesRes.data || []);
+      setAboutData(aboutRes.data);
+      setEvents(eventsRes.data || []);
+      setGalleryImages(galleryRes.data || []);
+      setContactData(contactRes.data);
+      setDonationInfo(donationRes.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setLoading(false);
+    }
+  };
 
   const filteredImages = selectedCategory === 'all' 
     ? galleryImages 
     : galleryImages.filter(img => img.category === selectedCategory);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-white">
+        <div className="text-xl font-semibold text-gray-700">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -34,14 +79,14 @@ const Home = () => {
               />
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#home" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Home</a>
-              <a href="#activities" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Activities</a>
-              <a href="#about" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">About</a>
-              <a href="#events" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Events</a>
-              <a href="#gallery" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Gallery</a>
-              <a href="#contact" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">Contact</a>
+              <a href="#home" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Home</a>
+              <a href="#activities" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Activities</a>
+              <a href="#about" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">About</a>
+              <a href="#events" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Events</a>
+              <a href="#gallery" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Gallery</a>
+              <a href="#contact" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Contact</a>
             </nav>
-            <Button className="hidden md:block bg-amber-500 hover:bg-amber-600 text-white font-semibold">
+            <Button className="hidden md:block bg-[#d97706] hover:bg-[#b45309] text-white font-semibold">
               Donate Now
             </Button>
           </div>
@@ -56,24 +101,24 @@ const Home = () => {
             alt="Temple" 
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-800/70"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0f2244]/95 to-[#1a3a6b]/85"></div>
         </div>
         
         <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
-          <Badge className="mb-6 bg-amber-500 text-white px-6 py-2 text-sm font-semibold">
-            Serving Since 2009
+          <Badge className="mb-6 bg-[#d97706] text-white px-6 py-2 text-sm font-semibold border-0">
+            Serving Since 2004
           </Badge>
           <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Building a Compassionate <span className="text-amber-400">Society</span>
+            Building a Compassionate <span className="text-[#fbbf24]">Society</span>
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
             Join us in our mission to spread spiritual values, cultural heritage, and serve humanity through compassion and dedication.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-8 py-6 text-lg">
+            <Button size="lg" className="bg-[#d97706] hover:bg-[#b45309] text-white font-semibold px-8 py-6 text-lg">
               Join Our Mission
             </Button>
-            <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white hover:text-blue-900 font-semibold px-8 py-6 text-lg">
+            <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white hover:text-[#1a3a6b] font-semibold px-8 py-6 text-lg">
               Learn More
             </Button>
           </div>
@@ -274,47 +319,49 @@ const Home = () => {
       </section>
 
       {/* Donation Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <section className="py-20 px-4 bg-gradient-to-r from-[#0f2244] to-[#1a3a6b] text-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-6">Support Our Mission</h2>
           <p className="text-xl mb-12 text-blue-100">
             Your generous contribution helps us continue our social and spiritual work in the community
           </p>
           
-          <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-            <CardHeader>
-              <CardTitle className="text-2xl text-white">Donation Details</CardTitle>
-              <CardDescription className="text-blue-100">You can contribute through bank transfer or UPI</CardDescription>
-            </CardHeader>
-            <CardContent className="text-left space-y-4">
-              <div>
-                <p className="text-sm text-blue-200 mb-1">Bank Name</p>
-                <p className="font-semibold text-lg">{donationInfo.bankName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-blue-200 mb-1">Account Name</p>
-                <p className="font-semibold text-lg">{donationInfo.accountName}</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {donationInfo && (
+            <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+              <CardHeader>
+                <CardTitle className="text-2xl text-white">Donation Details</CardTitle>
+                <CardDescription className="text-blue-100">You can contribute through bank transfer or UPI</CardDescription>
+              </CardHeader>
+              <CardContent className="text-left space-y-4">
                 <div>
-                  <p className="text-sm text-blue-200 mb-1">Account Number</p>
-                  <p className="font-semibold">{donationInfo.accountNumber}</p>
+                  <p className="text-sm text-blue-200 mb-1">Bank Name</p>
+                  <p className="font-semibold text-lg">{donationInfo.bankName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-blue-200 mb-1">IFSC Code</p>
-                  <p className="font-semibold">{donationInfo.ifscCode}</p>
+                  <p className="text-sm text-blue-200 mb-1">Account Name</p>
+                  <p className="font-semibold text-lg">{donationInfo.accountName}</p>
                 </div>
-              </div>
-              <Separator className="bg-white/20" />
-              <div>
-                <p className="text-sm text-blue-200 mb-1">UPI ID</p>
-                <p className="font-semibold text-lg">{donationInfo.upiId}</p>
-              </div>
-              <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-6 text-lg mt-6">
-                Donate Now
-              </Button>
-            </CardContent>
-          </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-blue-200 mb-1">Account Number</p>
+                    <p className="font-semibold">{donationInfo.accountNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-200 mb-1">IFSC Code</p>
+                    <p className="font-semibold">{donationInfo.ifscCode}</p>
+                  </div>
+                </div>
+                <Separator className="bg-white/20" />
+                <div>
+                  <p className="text-sm text-blue-200 mb-1">UPI ID</p>
+                  <p className="font-semibold text-lg">{donationInfo.upiId}</p>
+                </div>
+                <Button className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-6 text-lg mt-6 border-0">
+                  Donate Now
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
 
