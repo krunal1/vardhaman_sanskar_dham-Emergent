@@ -5,12 +5,14 @@ import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Badge } from '../components/ui/badge';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import {
   LogOut, Activity, Info, Calendar, Image, Phone, CreditCard,
-  Plus, Edit, Trash2, Save
+  Plus, Edit, Trash2, Save, User, Users, MessageSquare, DollarSign
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProfileTab, UsersTab, MessagesTab, DonationsTab } from '../components/AdminTabs';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -283,7 +285,7 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-6 gap-2 bg-white p-2 rounded-lg shadow">
+          <TabsList className="grid grid-cols-10 gap-2 bg-white p-2 rounded-lg shadow">
             <TabsTrigger value="activities" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
               <Activity className="w-4 h-4 mr-2" />
               Activities
@@ -307,6 +309,22 @@ const AdminDashboard = () => {
             <TabsTrigger value="donation" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
               <CreditCard className="w-4 h-4 mr-2" />
               Donation
+            </TabsTrigger>
+            <TabsTrigger value="profile" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <User className="w-4 h-4 mr-2" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="users" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <Users className="w-4 h-4 mr-2" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Messages
+            </TabsTrigger>
+            <TabsTrigger value="donations" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Donations
             </TabsTrigger>
           </TabsList>
 
@@ -877,6 +895,26 @@ const AdminDashboard = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <ProfileTab user={user} api={api} />
+          </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <UsersTab api={api} />
+          </TabsContent>
+
+          {/* Messages Tab */}
+          <TabsContent value="messages">
+            <MessagesTab api={api} />
+          </TabsContent>
+
+          {/* Donations Tab */}
+          <TabsContent value="donations">
+            <DonationsTab api={api} />
           </TabsContent>
         </Tabs>
       </main>

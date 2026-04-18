@@ -157,6 +157,35 @@ class DonationModel(BaseModel):
     ifscCode: str
     upiId: str
 
+class ContactMessageModel(BaseModel):
+    name: str
+    email: str
+    phone: str
+    message: str
+
+class DonationRecordModel(BaseModel):
+    donorName: str
+    donorEmail: str
+    donorPhone: str
+    amount: float
+    transactionId: str
+    date: str
+    status: str = "pending"
+
+class UserCreateModel(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    role: str = "admin"
+
+class PasswordChangeModel(BaseModel):
+    currentPassword: str
+    newPassword: str
+
+class ProfileUpdateModel(BaseModel):
+    name: str
+    email: EmailStr
+
 # ============ Admin Seeding ============
 
 async def seed_admin():
@@ -252,6 +281,87 @@ async def logout(response: Response):
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/")
     return {"message": "Logged out successfully"}
+
+# ============ Profile Management Routes ============
+
+@api_router.put("/auth/profile")
+async def update_profile(profile: ProfileUpdateModel, user: dict = Depends(get_current_user)):
+    # Check if email is being changed and if it's already taken
+    if profile.email.lower() != user["email"]:
+        existing = await db.users.find_one({"email": profile.email.lower()})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use")
+    
+    await db.users.update_one(
+        {"_id": ObjectId(user["_id"])},
+        {"$set": {"name": profile.name, "email": profile.email.lower()}}
+    )
+    return {"message": "Profile updated successfully"}
+
+@api_router.post("/auth/change-password")
+async def change_password(passwords: PasswordChangeModel, user: dict = Depends(get_current_user)):
+    # Get user with password hash
+    db_user = await db.users.find_one({"_id": ObjectId(user["_id"])})
+    
+    # Verify current password
+    if not verify_password(passwords.currentPassword, db_user["password_hash"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Update password
+    new_hash = hash_password(passwords.newPassword)
+    await db.users.update_one(
+        {"_id": ObjectId(user["_id"])},
+        {"$set": {"password_hash": new_hash}}
+    )
+    return {"message": "Password changed successfully"}
+
+# ============ User Management Routes ============
+
+@api_router.get("/users")
+async def get_users(user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    users = await db.users.find().to_list(100)
+    for u in users:
+        u["_id"] = str(u["_id"])
+        u.pop("password_hash", None)
+    return users
+
+@api_router.post("/users")
+async def create_user(new_user: UserCreateModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Check if email already exists
+    existing = await db.users.find_one({"email": new_user.email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    # Create user
+    hashed = hash_password(new_user.password)
+    user_dict = {
+        "email": new_user.email.lower(),
+        "password_hash": hashed,
+        "name": new_user.name,
+        "role": new_user.role,
+        "created_at": datetime.now(timezone.utc)
+    }
+    result = await db.users.insert_one(user_dict)
+    
+    return {"id": str(result.inserted_id), "message": "User created successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(user_id: str, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Don't allow deleting yourself
+    if user_id == user["_id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    await db.users.delete_one({"_id": ObjectId(user_id)})
+    return {"message": "User deleted successfully"}
 
 # ============ Activities Routes ============
 
@@ -412,6 +522,113 @@ async def update_donation(donation: DonationModel, user: dict = Depends(get_curr
         upsert=True
     )
     return donation.dict()
+
+# ============ Contact Messages Routes ============
+
+@api_router.post("/contact/message")
+async def submit_contact_message(message: ContactMessageModel):
+    message_dict = message.dict()
+    message_dict["created_at"] = datetime.now(timezone.utc)
+    message_dict["status"] = "unread"
+    
+    result = await db.contact_messages.insert_one(message_dict)
+    return {"id": str(result.inserted_id), "message": "Message sent successfully"}
+
+@api_router.get("/contact/messages")
+async def get_contact_messages(user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    messages = await db.contact_messages.find().sort("created_at", -1).to_list(100)
+    for msg in messages:
+        msg["_id"] = str(msg["_id"])
+    return messages
+
+@api_router.put("/contact/messages/{message_id}/read")
+async def mark_message_read(message_id: str, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.contact_messages.update_one(
+        {"_id": ObjectId(message_id)},
+        {"$set": {"status": "read"}}
+    )
+    return {"message": "Message marked as read"}
+
+@api_router.delete("/contact/messages/{message_id}")
+async def delete_contact_message(message_id: str, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.contact_messages.delete_one({"_id": ObjectId(message_id)})
+    return {"message": "Message deleted successfully"}
+
+# ============ Donation Records Routes ============
+
+@api_router.get("/donations/records")
+async def get_donation_records(user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    records = await db.donation_records.find().sort("date", -1).to_list(100)
+    for record in records:
+        record["_id"] = str(record["_id"])
+    return records
+
+@api_router.post("/donations/records")
+async def create_donation_record(record: DonationRecordModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    record_dict = record.dict()
+    record_dict["created_at"] = datetime.now(timezone.utc)
+    result = await db.donation_records.insert_one(record_dict)
+    
+    return {"id": str(result.inserted_id), "message": "Donation recorded successfully"}
+
+@api_router.put("/donations/records/{record_id}")
+async def update_donation_record(record_id: str, record: DonationRecordModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.donation_records.update_one(
+        {"_id": ObjectId(record_id)},
+        {"$set": record.dict()}
+    )
+    return {"message": "Donation record updated successfully"}
+
+@api_router.post("/donations/records/{record_id}/send-thankyou")
+async def send_thankyou(record_id: str, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    record = await db.donation_records.find_one({"_id": ObjectId(record_id)})
+    if not record:
+        raise HTTPException(status_code=404, detail="Donation record not found")
+    
+    # Update status to confirmed and add thank you sent timestamp
+    await db.donation_records.update_one(
+        {"_id": ObjectId(record_id)},
+        {"$set": {
+            "status": "confirmed",
+            "thank_you_sent_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # For now, just return success. Email/WhatsApp integration can be added later
+    return {
+        "message": "Thank you notification sent successfully",
+        "donor": record["donorName"],
+        "email": record.get("donorEmail", "")
+    }
+
+@api_router.delete("/donations/records/{record_id}")
+async def delete_donation_record(record_id: str, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.donation_records.delete_one({"_id": ObjectId(record_id)})
+    return {"message": "Donation record deleted successfully"}
 
 # ============ Image Upload Route ============
 

@@ -1,128 +1,107 @@
 # Product Requirements Document - Vardhaman Sanskar Dham Website
 
-## Original Problem Statement
-Build a website for trust/NGO named Vardhaman Sanskar Dham (Dombivli). First page should show various activities like Jivdaya, Anukampa, Sadharmik Bhakti, Bal Sanskaran, etc. Include space for contact details. Admin panel needed for content management.
+## Project Overview
+Full-stack NGO website with comprehensive admin panel for Vardhaman Sanskar Dham (Dombivli)
 
-## User Choices & Inputs
-- **Color Scheme**: Dark royal blue (#1a3a6b, #0f2244) with amber (#d97706, #b45309)
-- **Admin Access**: Email/Password (vsddomb@gmail.com)
-- **Content Management**: All sections (Activities, About, Events, Gallery, Contact, Donation)
-- **Images**: Real organization photos provided by user
+## Features Implemented
 
-## Architecture & Tech Stack
-- **Frontend**: React.js with React Router, Axios
-- **Backend**: FastAPI with JWT authentication
-- **Database**: MongoDB
-- **Styling**: Tailwind CSS with dark royal blue and amber theme
-- **Components**: Shadcn UI component library
-- **Auth**: bcrypt + JWT tokens with httpOnly cookies
+### Public Website ✅
+- Dark royal blue (#1a3a6b, #0f2244) with amber (#d97706) theme
+- Sections: Hero, Activities (4), About, Events (3), Gallery (6 with filters), Donation, Contact
+- Working contact form (submits to database)
+- Real organization images integrated
+- Responsive design with smooth animations
 
-## What's Been Implemented (December 2024)
+### Admin Panel ✅
+**Authentication**:
+- Email/Password login with JWT
+- Secure httpOnly cookies
+- Password: bcrypt hashed
 
-### Phase 1: Frontend Website ✅
-**Features**:
-1. **Header/Navigation** - Sticky nav with logo, menu links, Donate CTA
-2. **Hero Section** - Full-screen with dark royal blue gradient, amber accents
-3. **Activities Section** - 4 activities with real images (Jivdaya, Anukampa, Sadharmik Bhakti, Bal Sanskaran)
-4. **About Section** - Description, mission, vision, statistics (20+ years, 2,14,000+ animals saved)
-5. **Events Section** - Upcoming and completed events with dates
-6. **Photo Gallery** - Category filtering (Spiritual, Service, Education)
-7. **Donation Section** - Bank details, UPI information
-8. **Contact Section** - Contact form, phone, email, address
-9. **Footer** - Organization branding, quick links
+**Content Management Tabs**:
+1. **Activities** - Add/Edit/Delete with image upload
+2. **About** - Edit description, mission, vision, stats
+3. **Events** - Create/Update/Delete events
+4. **Gallery** - Upload/Delete images by category
+5. **Contact** - Update contact information
+6. **Donation** - Edit bank/UPI details
 
-### Phase 2: Backend API ✅
-**Endpoints**:
-- Auth: `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`
-- Activities: GET, POST, PUT, DELETE `/api/activities`
-- About: GET, PUT `/api/about`
-- Events: GET, POST, PUT, DELETE `/api/events`
-- Gallery: GET, POST, DELETE `/api/gallery`
-- Contact: GET, PUT `/api/contact`
-- Donation: GET, PUT `/api/donation`
+**New Features Added**:
+7. **Profile** - Change password & update profile details
+8. **Users** - Create/manage multiple admin accounts
+9. **Messages** - View contact form submissions (stored in DB)
+10. **Donations** - Record donations, send thank you notifications
 
-**Security**:
-- JWT authentication with httpOnly cookies
-- Password hashing with bcrypt
-- Admin role-based access control
-- Protected routes middleware
+### Backend APIs ✅
+- `/api/auth/*` - Login, logout, profile, change password
+- `/api/users` - User management (CRUD)
+- `/api/activities` - Activities CRUD
+- `/api/about` - About section management
+- `/api/events` - Events CRUD
+- `/api/gallery` - Gallery CRUD
+- `/api/contact` - Contact info & messages
+- `/api/contact/message` - Public contact form submission
+- `/api/contact/messages` - Admin view messages
+- `/api/donation` - Donation details
+- `/api/donations/records` - Donation tracking CRUD
+- `/api/donations/records/{id}/send-thankyou` - Send thank you
+- `/api/upload` - Image upload endpoint
 
-### Phase 3: Admin Panel ✅
-**Features**:
-1. **Admin Login** - Email/password authentication
-2. **Dashboard** - Tabbed interface for all content sections
-3. **Activities Management** - Add, edit, delete activities
-4. **About Management** - Edit description, mission, vision, stats
-5. **Events Management** - Create, update, delete events
-6. **Gallery Management** - Add, delete images by category
-7. **Contact Management** - Update contact information
-8. **Donation Management** - Update bank and UPI details
+### Database Collections
+- **users** - Admin accounts
+- **activities** - 4 activities
+- **about** - Organization info
+- **events** - Event listings
+- **gallery** - Photo gallery
+- **contact** - Contact information
+- **contact_messages** - Contact form submissions
+- **donation** - Bank/UPI details
+- **donation_records** - Donation tracking
 
-**Admin Credentials**:
-- Email: vsddomb@gmail.com
-- Password: Admin@VSD2024
-- Stored in: `/app/memory/test_credentials.md`
+## Admin Credentials
+**Email**: vsddomb@gmail.com
+**Password**: Admin@VSD2024
 
-### Phase 4: Database Integration ✅
-- MongoDB collections: users, activities, about, events, gallery, contact, donation
-- Seeded with real organization data
-- Frontend fetches from backend APIs
-- Real-time content updates
+## Access Points
+- **Website**: https://sanskar-dham.preview.emergentagent.com
+- **Admin Login**: https://sanskar-dham.preview.emergentagent.com/admin/login
 
-### Phase 5: Color Theme Update ✅
-- Updated from light blue/gold to **dark royal blue** and **amber**
-- Hero section: Dark blue (#0f2244, #1a3a6b) gradient
-- CTAs: Amber (#d97706) with hover effects
-- Consistent theme across all sections
+## How It Works
 
-## Technical Implementation
+### Contact Form Flow
+1. User fills contact form on website
+2. Submits to `/api/contact/message`
+3. Stored in database with "unread" status
+4. Admin views in Messages tab
+5. Admin can mark as read or delete
 
-### Backend Structure
-```
-/app/backend/
-├── server.py          # Main FastAPI app with all routes
-├── seed_db.py         # Database seeding script
-├── .env               # JWT_SECRET, ADMIN_EMAIL, ADMIN_PASSWORD
-└── requirements.txt   # Dependencies (bcrypt, pyjwt, motor, fastapi)
-```
+### Donation Management Flow
+1. Donor makes bank/UPI transfer
+2. Admin records donation in Donations tab
+3. Enter donor details, amount, transaction ID
+4. Status: "pending"
+5. Admin clicks "Send Thank You"
+6. Status changes to "confirmed"
+7. Thank you notification sent (ready for email/WhatsApp integration)
 
-### Frontend Structure
-```
-/app/frontend/src/
-├── pages/
-│   ├── Home.jsx           # Main public website
-│   ├── AdminLogin.jsx     # Admin login page
-│   └── AdminDashboard.jsx # Admin content management
-├── context/
-│   └── AuthContext.jsx    # Authentication state management
-├── components/ui/         # Shadcn UI components
-└── App.js                 # Routes and auth provider
-```
+### User Management Flow
+1. Admin creates new user in Users tab
+2. Provides email, password, name
+3. New admin can login independently
+4. Each admin can manage their own profile
+5. Cannot delete own account (safety)
 
-### Database Schema
-- **users**: _id, email, password_hash, name, role, created_at
-- **activities**: _id, title, subtitle, description, icon, image
-- **about**: _id, title, description, mission, vision, stats[]
-- **events**: _id, title, date, time, location, description, status
-- **gallery**: _id, url, title, category
-- **contact**: _id, name, phone, email, address, timing
-- **donation**: _id, bankName, accountName, accountNumber, ifscCode, upiId
+### Image Upload
+1. Admin clicks "Upload" in Activities/Gallery
+2. Selects image from computer
+3. Uploaded to `/app/backend/uploads/`
+4. URL auto-generated and saved
+5. Accessible via `/uploads/{filename}`
 
-## Current Status
-✅ **Fully Functional** - Website and admin panel operational
-✅ **Backend Integration** - All data from MongoDB
-✅ **Authentication** - Secure admin access with JWT
-✅ **Content Management** - Admin can update all sections
-✅ **Color Theme** - Dark royal blue with amber accents
-✅ **Real Images** - Organization's actual photos integrated
-
-## Next Steps / Potential Enhancements
-- [ ] Image upload functionality (currently URL-based)
-- [ ] Contact form backend (email notifications)
-- [ ] Online payment gateway integration
-- [ ] Mobile responsive menu
-- [ ] SEO optimization
-- [ ] Analytics integration
-- [ ] Multi-language support (Hindi, Marathi)
-- [ ] Event registration system
-- [ ] Volunteer management system
+## Next Steps
+- Email/WhatsApp integration for notifications (SendGrid, Twilio)
+- Payment gateway (Razorpay/Stripe) for online donations
+- Bulk image upload for gallery
+- Export donation records (CSV/Excel)
+- SMS notifications
+- Multi-language support

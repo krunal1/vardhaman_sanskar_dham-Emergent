@@ -24,6 +24,16 @@ const Home = () => {
   const [contactData, setContactData] = useState(null);
   const [donationInfo, setDonationInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Contact form state
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -50,6 +60,22 @@ const Home = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
       setLoading(false);
+    }
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitMessage('');
+    
+    try {
+      await axios.post(`${BACKEND_URL}/api/contact/message`, contactForm);
+      setSubmitMessage('Thank you! Your message has been sent successfully. We will get back to you soon.');
+      setContactForm({ name: '', email: '', phone: '', message: '' });
+    } catch (error) {
+      setSubmitMessage('Sorry, there was an error sending your message. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -432,41 +458,62 @@ const Home = () => {
                 <CardDescription>Fill out the form and we'll get back to you shortly</CardDescription>
               </CardHeader>
               <CardContent>
-                <form className="space-y-4">
+                {submitMessage && (
+                  <div className={`mb-4 p-4 rounded-lg ${submitMessage.includes('Thank you') ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                    {submitMessage}
+                  </div>
+                )}
+                <form onSubmit={handleContactSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
                     <input 
                       type="text" 
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       placeholder="Your name"
+                      required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <input 
                       type="email" 
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       placeholder="your@email.com"
+                      required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                     <input 
                       type="tel" 
+                      value={contactForm.phone}
+                      onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       placeholder="+91 "
+                      required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Message</label>
                     <textarea 
                       rows="4"
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
                       placeholder="Your message..."
+                      required
                     ></textarea>
                   </div>
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg">
-                    Send Message
+                  <Button 
+                    type="submit" 
+                    disabled={submitting}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 text-lg"
+                  >
+                    {submitting ? 'Sending...' : 'Send Message'}
                   </Button>
                 </form>
               </CardContent>
