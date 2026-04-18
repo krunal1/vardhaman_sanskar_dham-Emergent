@@ -7,6 +7,7 @@ load_dotenv(ROOT_DIR / '.env')
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
@@ -19,6 +20,8 @@ import bcrypt
 import jwt
 import secrets
 import base64
+import uuid
+import shutil
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -31,6 +34,13 @@ JWT_ALGORITHM = "HS256"
 
 # Create the main app
 app = FastAPI()
+
+# Create uploads directory
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+# Mount static files
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 # CORS Configuration
 app.add_middleware(
@@ -402,6 +412,38 @@ async def update_donation(donation: DonationModel, user: dict = Depends(get_curr
         upsert=True
     )
     return donation.dict()
+
+# ============ Image Upload Route ============
+
+@api_router.post("/upload")
+async def upload_image(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Only JPEG, PNG, and WebP images are allowed")
+    
+    # Generate unique filename
+    file_extension = file.filename.split(".")[-1]
+    unique_filename = f"{uuid.uuid4()}.{file_extension}"
+    file_path = UPLOAD_DIR / unique_filename
+    
+    # Save file
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Return the URL
+        backend_url = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001")
+        image_url = f"{backend_url}/uploads/{unique_filename}"
+        
+        return {"url": image_url, "filename": unique_filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
+    finally:
+        file.file.close()
 
 # Include router in app
 app.include_router(api_router)

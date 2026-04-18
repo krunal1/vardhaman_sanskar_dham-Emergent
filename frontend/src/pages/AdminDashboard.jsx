@@ -29,6 +29,7 @@ const AdminDashboard = () => {
   
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState({});
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -63,6 +64,28 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');
+    }
+  };
+
+  // Image upload handler
+  const handleImageUpload = async (file) => {
+    if (!file) return null;
+    
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const { data } = await api.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success('Image uploaded successfully');
+      setUploadingImage(false);
+      return data.url;
+    } catch (error) {
+      toast.error('Failed to upload image');
+      setUploadingImage(false);
+      return null;
     }
   };
 
@@ -160,19 +183,30 @@ const AdminDashboard = () => {
 
   // Gallery handlers
   const addGalleryImage = async () => {
-    const url = prompt('Enter image URL:');
-    const title = prompt('Enter image title:');
-    const category = prompt('Enter category (bhakti/service/education):');
-    
-    if (url && title && category) {
-      try {
-        await api.post('/api/gallery', { url, title, category });
-        toast.success('Image added successfully');
-        fetchAllData();
-      } catch (error) {
-        toast.error('Failed to add image');
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const title = prompt('Enter image title:');
+      const category = prompt('Enter category (bhakti/service/education):');
+      
+      if (title && category) {
+        const url = await handleImageUpload(file);
+        if (url) {
+          try {
+            await api.post('/api/gallery', { url, title, category });
+            toast.success('Image added successfully');
+            fetchAllData();
+          } catch (error) {
+            toast.error('Failed to add image');
+          }
+        }
       }
-    }
+    };
+    input.click();
   };
 
   const deleteGalleryImage = async (id) => {
@@ -333,16 +367,50 @@ const AdminDashboard = () => {
                             setActivities(newActivities);
                           }}
                         />
-                        <input
-                          className="w-full px-4 py-2 border rounded-lg"
-                          placeholder="Image URL"
-                          value={activity.image}
-                          onChange={(e) => {
-                            const newActivities = [...activities];
-                            newActivities[index].image = e.target.value;
-                            setActivities(newActivities);
-                          }}
-                        />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Activity Image
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              className="flex-1 px-4 py-2 border rounded-lg"
+                              placeholder="Image URL or upload new image"
+                              value={activity.image}
+                              onChange={(e) => {
+                                const newActivities = [...activities];
+                                newActivities[index].image = e.target.value;
+                                setActivities(newActivities);
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              onClick={async () => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*';
+                                input.onchange = async (e) => {
+                                  const file = e.target.files[0];
+                                  if (file) {
+                                    const url = await handleImageUpload(file);
+                                    if (url) {
+                                      const newActivities = [...activities];
+                                      newActivities[index].image = url;
+                                      setActivities(newActivities);
+                                    }
+                                  }
+                                };
+                                input.click();
+                              }}
+                              className="bg-blue-500 hover:bg-blue-600"
+                              disabled={uploadingImage}
+                            >
+                              {uploadingImage ? 'Uploading...' : 'Upload'}
+                            </Button>
+                          </div>
+                          {activity.image && (
+                            <img src={activity.image} alt="Preview" className="mt-2 h-32 object-cover rounded-lg" />
+                          )}
+                        </div>
                         <div className="flex gap-2">
                           <Button onClick={() => saveActivity(activity, index)} className="bg-green-600 hover:bg-green-700">
                             <Save className="w-4 h-4 mr-2" />
