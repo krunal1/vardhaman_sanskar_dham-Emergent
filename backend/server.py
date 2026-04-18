@@ -39,10 +39,7 @@ app = FastAPI()
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-# Mount static files
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
-
-# CORS Configuration
+# CORS Configuration - MUST be before other middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -685,7 +682,7 @@ async def upload_image(file: UploadFile = File(...), user: dict = Depends(get_cu
         
         # Return the URL
         backend_url = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001")
-        image_url = f"{backend_url}/uploads/{unique_filename}"
+        image_url = f"{backend_url}/api/uploads/{unique_filename}"
         
         return {"url": image_url, "filename": unique_filename}
     except Exception as e:
@@ -695,6 +692,9 @@ async def upload_image(file: UploadFile = File(...), user: dict = Depends(get_cu
 
 # Include router in app
 app.include_router(api_router)
+
+# Mount static files AFTER router to avoid conflicts
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
