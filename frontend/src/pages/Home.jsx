@@ -107,15 +107,45 @@ const Home = () => {
                 className="h-16 w-auto object-contain"
               />
             </div>
-            <nav className="hidden md:flex space-x-8">
+            <nav className="hidden md:flex space-x-8 items-center">
               <a href="#home" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Home</a>
               <a href="#activities" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Activities</a>
               <a href="#about" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">About</a>
               <a href="#events" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Events</a>
               <a href="#gallery" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Gallery</a>
+              
+              {/* More dropdown */}
+              <div className="relative group">
+                <button className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium flex items-center gap-1">
+                  More
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-56 bg-white shadow-xl rounded-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="py-2">
+                    <a href="#tapovan-vidyalay" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
+                      Tapovan Vidyalay
+                    </a>
+                    <a href="#tapovan-sanskardham" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
+                      Tapovan Sanskardham
+                    </a>
+                    <a href="#gurudev" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
+                      Gurudev
+                    </a>
+                    <a href="#media" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
+                      Media & Videos
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
               <a href="#contact" className="text-gray-700 hover:text-[#1a3a6b] transition-colors font-medium">Contact</a>
             </nav>
-            <Button className="hidden md:block bg-[#d97706] hover:bg-[#b45309] text-white font-semibold">
+            <Button 
+              className="hidden md:block bg-[#d97706] hover:bg-[#b45309] text-white font-semibold"
+              onClick={() => {
+                document.getElementById('donation')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
               Donate Now
             </Button>
           </div>
@@ -359,48 +389,126 @@ const Home = () => {
       </section>
 
       {/* Donation Section */}
-      <section className="py-16 px-4 bg-gradient-to-r from-[#0f2244] to-[#1a3a6b] text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-4">Support Our Mission</h2>
-          <p className="text-lg mb-10 text-blue-100">
-            Your generous contribution helps us continue our work
-          </p>
+      <section id="donation" className="py-16 px-4 bg-gradient-to-r from-[#0f2244] to-[#1a3a6b] text-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-4xl font-bold mb-4">Support Our Mission</h2>
+            <p className="text-lg text-blue-100">
+              Your generous contribution helps us continue our work
+            </p>
+          </div>
           
           {donationInfo && (
-            <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
-              <CardHeader>
-                <CardTitle className="text-2xl text-white">Donation Details</CardTitle>
-                <CardDescription className="text-blue-100">Contribute via bank transfer or UPI</CardDescription>
-              </CardHeader>
-              <CardContent className="text-left space-y-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-blue-200 mb-1">Bank</p>
-                    <p className="font-semibold">{donationInfo.bankName}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left Side - Bank Details */}
+              <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white">
+                <CardHeader>
+                  <CardTitle className="text-2xl text-white flex items-center gap-2">
+                    <span className="bg-[#d97706] text-white px-3 py-1 rounded text-base font-bold">Online Payment Details</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+                    <p className="text-sm text-[#fbbf24] mb-3 font-bold">NEFT / RTGS DETAILS</p>
+                    <p className="text-xs text-blue-200 mb-1">Before Making Payment Please check Name as</p>
+                    
+                    <div className="space-y-2 mt-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-blue-200">Bank Name:</span>
+                        <span className="font-semibold">{donationInfo.bankName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-blue-200">Account Name:</span>
+                        <span className="font-semibold">{donationInfo.accountName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-blue-200">A/C:</span>
+                        <span className="font-semibold">{donationInfo.accountNumber}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-blue-200">IFSC Code:</span>
+                        <span className="font-semibold">{donationInfo.ifscCode}</span>
+                      </div>
+                      {donationInfo.branch && (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-blue-200">Branch:</span>
+                          <span className="font-semibold">{donationInfo.branch}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-blue-200 mb-1">Account Name</p>
-                    <p className="font-semibold">{donationInfo.accountName}</p>
+
+                  {donationInfo.receiptContact && (
+                    <div className="bg-white/5 p-4 rounded-lg border border-white/20">
+                      <p className="text-sm text-[#fbbf24] mb-2 font-bold">(For Automatic Receipt Generation)</p>
+                      <p className="text-xs text-blue-200 mb-2">For Receipt Contact to our Karyakarta or {donationInfo.receiptContactType} to</p>
+                      <p className="text-2xl font-bold text-center text-white">{donationInfo.receiptContact}</p>
+                    </div>
+                  )}
+
+                  <div className="text-center mt-4">
+                    <p className="text-xs text-blue-200 mb-2">DOWNLOAD OUR APP VSDHAM</p>
+                    <div className="flex justify-center gap-3">
+                      <a href="#" className="inline-block">
+                        <div className="bg-black px-3 py-2 rounded text-xs">
+                          <div className="flex items-center gap-2">
+                            <span>📱</span>
+                            <div className="text-left">
+                              <div className="text-[8px]">Download on</div>
+                              <div className="font-bold">App Store</div>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                      <a href="#" className="inline-block">
+                        <div className="bg-black px-3 py-2 rounded text-xs">
+                          <div className="flex items-center gap-2">
+                            <span>▶️</span>
+                            <div className="text-left">
+                              <div className="text-[8px]">GET IT ON</div>
+                              <div className="font-bold">Google Play</div>
+                            </div>
+                          </div>
+                        </div>
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-blue-200 mb-1">Account Number</p>
-                    <p className="font-semibold">{donationInfo.accountNumber}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-blue-200 mb-1">IFSC Code</p>
-                    <p className="font-semibold">{donationInfo.ifscCode}</p>
-                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right Side - QR Code */}
+              <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white flex flex-col items-center justify-center p-8">
+                <div className="text-center mb-6">
+                  <p className="text-3xl font-bold mb-2">SCAN QR CODE</p>
+                  <Button className="bg-[#d97706] hover:bg-[#b45309] text-white font-bold px-8 py-6 text-xl border-0">
+                    DONATE NOW
+                  </Button>
                 </div>
-                <Separator className="bg-white/20" />
-                <div>
-                  <p className="text-sm text-blue-200 mb-1">UPI ID</p>
-                  <p className="font-semibold text-lg">{donationInfo.upiId}</p>
+                
+                {donationInfo.qrCodeImage && (
+                  <div className="bg-white p-4 rounded-lg mb-6">
+                    <img 
+                      src={donationInfo.qrCodeImage} 
+                      alt="QR Code for Donation" 
+                      className="w-64 h-64 object-contain"
+                    />
+                  </div>
+                )}
+                
+                <div className="text-center">
+                  <p className="text-xl font-bold mb-2">UPI ID to Donate:</p>
+                  <p className="text-3xl font-bold text-[#fbbf24] mb-4">{donationInfo.upiId}</p>
+                  
+                  {donationInfo.receiptContact && (
+                    <>
+                      <p className="text-sm text-blue-200 mb-2">For Receipt Contact to our</p>
+                      <p className="text-sm text-blue-200 mb-2">Karyakarta or Whatsapp to</p>
+                      <p className="text-2xl font-bold text-white">{donationInfo.receiptContact}</p>
+                    </>
+                  )}
                 </div>
-                <Button className="w-full bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-5 text-lg mt-4 border-0">
-                  Donate Now
-                </Button>
-              </CardContent>
-            </Card>
+              </Card>
+            </div>
           )}
         </div>
       </section>

@@ -152,7 +152,11 @@ class DonationModel(BaseModel):
     accountName: str
     accountNumber: str
     ifscCode: str
+    branch: str = ""
     upiId: str
+    qrCodeImage: str = ""
+    receiptContact: str = ""
+    receiptContactType: str = "WhatsApp"
 
 class ContactMessageModel(BaseModel):
     name: str
