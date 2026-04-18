@@ -432,3 +432,202 @@ export const DonationsTab = ({ api }) => {
     </div>
   );
 };
+
+export const HeroTab = ({ api, handleImageUpload, uploadingImage }) => {
+  const [hero, setHero] = useState(null);
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    fetchHero();
+  }, []);
+
+  const fetchHero = async () => {
+    try {
+      const { data } = await api.get('/api/hero');
+      setHero(data);
+    } catch (error) {
+      toast.error('Failed to fetch hero section');
+    }
+  };
+
+  const saveHero = async () => {
+    try {
+      await api.put('/api/hero', hero);
+      toast.success('Hero section updated successfully');
+      setEditing(false);
+    } catch (error) {
+      toast.error('Failed to update hero section');
+    }
+  };
+
+  if (!hero) return <div>Loading...</div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-[#1a3a6b]">Hero Section Management</h2>
+        {!editing ? (
+          <Button onClick={() => setEditing(true)} className="bg-[#1a3a6b]">Edit Hero Section</Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button onClick={saveHero} className="bg-green-600">Save Changes</Button>
+            <Button onClick={() => { setEditing(false); fetchHero(); }} variant="outline">Cancel</Button>
+          </div>
+        )}
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Hero Section Content</CardTitle>
+          <CardDescription>This is the first thing visitors see on your website</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {editing ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium mb-2">Badge Text (e.g., "Serving Since 2004")</label>
+                <input
+                  className="w-full px-4 py-2 border rounded-lg"
+                  value={hero.badge}
+                  onChange={(e) => setHero({ ...hero, badge: e.target.value })}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Main Title</label>
+                <input
+                  className="w-full px-4 py-2 border rounded-lg"
+                  placeholder="Building a Compassionate"
+                  value={hero.title}
+                  onChange={(e) => setHero({ ...hero, title: e.target.value })}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Highlighted Word (shown in golden color)</label>
+                <input
+                  className="w-full px-4 py-2 border rounded-lg"
+                  placeholder="Society"
+                  value={hero.highlightedWord}
+                  onChange={(e) => setHero({ ...hero, highlightedWord: e.target.value })}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Subtitle/Description</label>
+                <textarea
+                  className="w-full px-4 py-2 border rounded-lg"
+                  rows="3"
+                  value={hero.subtitle}
+                  onChange={(e) => setHero({ ...hero, subtitle: e.target.value })}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Background Image</label>
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 px-4 py-2 border rounded-lg"
+                    placeholder="Image URL or upload new"
+                    value={hero.backgroundImage}
+                    onChange={(e) => setHero({ ...hero, backgroundImage: e.target.value })}
+                  />
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const url = await handleImageUpload(file);
+                          if (url) {
+                            setHero({ ...hero, backgroundImage: url });
+                          }
+                        }
+                      };
+                      input.click();
+                    }}
+                    className="bg-blue-500"
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage ? 'Uploading...' : 'Upload'}
+                  </Button>
+                </div>
+                {hero.backgroundImage && (
+                  <img src={hero.backgroundImage} alt="Hero Background" className="mt-2 h-32 object-cover rounded-lg w-full" />
+                )}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Button 1 Text</label>
+                  <input
+                    className="w-full px-4 py-2 border rounded-lg"
+                    value={hero.button1Text}
+                    onChange={(e) => setHero({ ...hero, button1Text: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Button 2 Text</label>
+                  <input
+                    className="w-full px-4 py-2 border rounded-lg"
+                    value={hero.button2Text}
+                    onChange={(e) => setHero({ ...hero, button2Text: e.target.value })}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Section Height</label>
+                <select
+                  className="w-full px-4 py-2 border rounded-lg"
+                  value={hero.height}
+                  onChange={(e) => setHero({ ...hero, height: e.target.value })}
+                >
+                  <option value="400px">Compact (400px)</option>
+                  <option value="500px">Medium (500px)</option>
+                  <option value="600px">Large (600px)</option>
+                </select>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Badge</p>
+                <p className="font-semibold">{hero.badge}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Title</p>
+                <p className="font-semibold text-lg">{hero.title} <span className="text-[#d97706]">{hero.highlightedWord}</span></p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Subtitle</p>
+                <p>{hero.subtitle}</p>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600 mb-2">Background Image</p>
+                <img src={hero.backgroundImage} alt="Hero Background" className="h-32 object-cover rounded-lg w-full" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-1">Button 1</p>
+                  <p className="font-semibold">{hero.button1Text}</p>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-1">Button 2</p>
+                  <p className="font-semibold">{hero.button2Text}</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-sm text-gray-600 mb-1">Height</p>
+                <p className="font-semibold">{hero.height}</p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};

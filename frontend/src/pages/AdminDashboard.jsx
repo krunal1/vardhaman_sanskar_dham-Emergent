@@ -12,7 +12,7 @@ import {
   Plus, Edit, Trash2, Save, User, Users, MessageSquare, DollarSign
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ProfileTab, UsersTab, MessagesTab, DonationsTab } from '../components/AdminTabs';
+import { ProfileTab, UsersTab, MessagesTab, DonationsTab, HeroTab } from '../components/AdminTabs';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -285,48 +285,57 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-10 gap-2 bg-white p-2 rounded-lg shadow">
+          <TabsList className="grid grid-cols-11 gap-2 bg-white p-2 rounded-lg shadow text-xs">
+            <TabsTrigger value="hero" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <Activity className="w-4 h-4 mr-1" />
+              Hero
+            </TabsTrigger>
             <TabsTrigger value="activities" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <Activity className="w-4 h-4 mr-2" />
+              <Activity className="w-4 h-4 mr-1" />
               Activities
             </TabsTrigger>
             <TabsTrigger value="about" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <Info className="w-4 h-4 mr-2" />
+              <Info className="w-4 h-4 mr-1" />
               About
             </TabsTrigger>
             <TabsTrigger value="events" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <Calendar className="w-4 h-4 mr-2" />
+              <Calendar className="w-4 h-4 mr-1" />
               Events
             </TabsTrigger>
             <TabsTrigger value="gallery" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <Image className="w-4 h-4 mr-2" />
+              <Image className="w-4 h-4 mr-1" />
               Gallery
             </TabsTrigger>
             <TabsTrigger value="contact" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <Phone className="w-4 h-4 mr-2" />
+              <Phone className="w-4 h-4 mr-1" />
               Contact
             </TabsTrigger>
             <TabsTrigger value="donation" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <CreditCard className="w-4 h-4 mr-2" />
+              <CreditCard className="w-4 h-4 mr-1" />
               Donation
             </TabsTrigger>
             <TabsTrigger value="profile" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <User className="w-4 h-4 mr-2" />
+              <User className="w-4 h-4 mr-1" />
               Profile
             </TabsTrigger>
             <TabsTrigger value="users" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <Users className="w-4 h-4 mr-2" />
+              <Users className="w-4 h-4 mr-1" />
               Users
             </TabsTrigger>
             <TabsTrigger value="messages" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <MessageSquare className="w-4 h-4 mr-2" />
+              <MessageSquare className="w-4 h-4 mr-1" />
               Messages
             </TabsTrigger>
             <TabsTrigger value="donations" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
-              <DollarSign className="w-4 h-4 mr-2" />
+              <DollarSign className="w-4 h-4 mr-1" />
               Donations
             </TabsTrigger>
           </TabsList>
+
+          {/* Hero Tab */}
+          <TabsContent value="hero">
+            <HeroTab api={api} handleImageUpload={handleImageUpload} uploadingImage={uploadingImage} />
+          </TabsContent>
 
           {/* Activities Tab */}
           <TabsContent value="activities" className="space-y-4">

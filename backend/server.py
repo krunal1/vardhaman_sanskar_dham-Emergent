@@ -172,6 +172,16 @@ class DonationRecordModel(BaseModel):
     date: str
     status: str = "pending"
 
+class HeroSectionModel(BaseModel):
+    badge: str
+    title: str
+    highlightedWord: str
+    subtitle: str
+    backgroundImage: str
+    button1Text: str = "Join Our Mission"
+    button2Text: str = "Learn More"
+    height: str = "500px"
+
 class UserCreateModel(BaseModel):
     email: EmailStr
     password: str
@@ -629,6 +639,27 @@ async def delete_donation_record(record_id: str, user: dict = Depends(get_curren
     
     await db.donation_records.delete_one({"_id": ObjectId(record_id)})
     return {"message": "Donation record deleted successfully"}
+
+# ============ Hero Section Routes ============
+
+@api_router.get("/hero")
+async def get_hero():
+    hero = await db.hero_section.find_one()
+    if hero:
+        hero["_id"] = str(hero["_id"])
+    return hero
+
+@api_router.put("/hero")
+async def update_hero(hero: HeroSectionModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.hero_section.update_one(
+        {},
+        {"$set": hero.dict()},
+        upsert=True
+    )
+    return hero.dict()
 
 # ============ Image Upload Route ============
 

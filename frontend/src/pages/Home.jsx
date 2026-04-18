@@ -23,6 +23,7 @@ const Home = () => {
   const [galleryImages, setGalleryImages] = useState([]);
   const [contactData, setContactData] = useState(null);
   const [donationInfo, setDonationInfo] = useState(null);
+  const [heroData, setHeroData] = useState(null);
   const [loading, setLoading] = useState(true);
   
   // Contact form state
@@ -41,13 +42,14 @@ const Home = () => {
 
   const fetchData = async () => {
     try {
-      const [activitiesRes, aboutRes, eventsRes, galleryRes, contactRes, donationRes] = await Promise.all([
+      const [activitiesRes, aboutRes, eventsRes, galleryRes, contactRes, donationRes, heroRes] = await Promise.all([
         axios.get(`${BACKEND_URL}/api/activities`),
         axios.get(`${BACKEND_URL}/api/about`),
         axios.get(`${BACKEND_URL}/api/events`),
         axios.get(`${BACKEND_URL}/api/gallery`),
         axios.get(`${BACKEND_URL}/api/contact`),
-        axios.get(`${BACKEND_URL}/api/donation`)
+        axios.get(`${BACKEND_URL}/api/donation`),
+        axios.get(`${BACKEND_URL}/api/hero`)
       ]);
 
       setActivities(activitiesRes.data || []);
@@ -56,6 +58,7 @@ const Home = () => {
       setGalleryImages(galleryRes.data || []);
       setContactData(contactRes.data);
       setDonationInfo(donationRes.data);
+      setHeroData(heroRes.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -120,40 +123,42 @@ const Home = () => {
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="relative h-[600px] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.pexels.com/photos/33610944/pexels-photo-33610944.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" 
-            alt="Temple" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0f2244]/95 to-[#1a3a6b]/85"></div>
-        </div>
-        
-        <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
-          <Badge className="mb-6 bg-[#d97706] text-white px-6 py-2 text-sm font-semibold border-0">
-            Serving Since 2004
-          </Badge>
-          <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Building a Compassionate <span className="text-[#fbbf24]">Society</span>
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join us in our mission to spread spiritual values, cultural heritage, and serve humanity through compassion and dedication.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-[#d97706] hover:bg-[#b45309] text-white font-semibold px-8 py-6 text-lg">
-              Join Our Mission
-            </Button>
-            <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white hover:text-[#1a3a6b] font-semibold px-8 py-6 text-lg">
-              Learn More
-            </Button>
+      {heroData && (
+        <section id="home" className="relative flex items-center justify-center overflow-hidden" style={{ height: heroData.height || '500px' }}>
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={heroData.backgroundImage} 
+              alt="Hero Background" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0f2244]/95 to-[#1a3a6b]/85"></div>
           </div>
-        </div>
+          
+          <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
+            <Badge className="mb-6 bg-[#d97706] text-white px-6 py-2 text-sm font-semibold border-0">
+              {heroData.badge}
+            </Badge>
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              {heroData.title} <span className="text-[#fbbf24]">{heroData.highlightedWord}</span>
+            </h2>
+            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+              {heroData.subtitle}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="bg-[#d97706] hover:bg-[#b45309] text-white font-semibold px-8 py-6 text-lg">
+                {heroData.button1Text}
+              </Button>
+              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white hover:text-[#1a3a6b] font-semibold px-8 py-6 text-lg">
+                {heroData.button2Text}
+              </Button>
+            </div>
+          </div>
 
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <ChevronDown className="w-8 h-8 text-white" />
-        </div>
-      </section>
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <ChevronDown className="w-8 h-8 text-white" />
+          </div>
+        </section>
+      )}
 
       {/* Activities Section */}
       <section id="activities" className="py-16 px-4 bg-gradient-to-br from-blue-50 to-slate-100">
