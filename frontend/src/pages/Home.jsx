@@ -131,25 +131,29 @@ const Home = () => {
               alt="Hero Background" 
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0f2244]/95 to-[#1a3a6b]/85"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0f2244]/60 to-[#1a3a6b]/50"></div>
           </div>
           
           <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
             <Badge className="mb-6 bg-[#d97706] text-white px-6 py-2 text-sm font-semibold border-0">
               {heroData.badge}
             </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
               {heroData.title} <span className="text-[#fbbf24]">{heroData.highlightedWord}</span>
             </h2>
-            <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-white mb-8 max-w-2xl mx-auto drop-shadow-md">
               {heroData.subtitle}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-[#d97706] hover:bg-[#b45309] text-white font-semibold px-8 py-6 text-lg">
-                {heroData.button1Text}
-              </Button>
-              <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white hover:text-[#1a3a6b] font-semibold px-8 py-6 text-lg">
-                {heroData.button2Text}
+            <div className="flex justify-center">
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white hover:text-[#1a3a6b] font-semibold px-8 py-6 text-lg"
+                onClick={() => {
+                  document.getElementById('activities')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {heroData.button2Text || 'Learn More'}
               </Button>
             </div>
           </div>
