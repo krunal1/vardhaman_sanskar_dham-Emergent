@@ -124,41 +124,43 @@ const Home = () => {
 
       {/* Hero Section */}
       {heroData && (
-        <section id="home" className="relative flex items-center justify-center overflow-hidden" style={{ height: heroData.height || '500px' }}>
+        <section id="home" className="relative flex items-end overflow-hidden" style={{ height: heroData.height || '500px' }}>
           <div className="absolute inset-0 z-0">
             <img 
               src={heroData.backgroundImage} 
               alt="Hero Background" 
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0f2244]/60 to-[#1a3a6b]/50"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0f2244]/90 via-[#1a3a6b]/40 to-transparent"></div>
           </div>
           
-          <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
-            <Badge className="mb-6 bg-[#d97706] text-white px-6 py-2 text-sm font-semibold border-0">
-              {heroData.badge}
-            </Badge>
-            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
-              {heroData.title} <span className="text-[#fbbf24]">{heroData.highlightedWord}</span>
-            </h2>
-            <p className="text-xl text-white mb-8 max-w-2xl mx-auto drop-shadow-md">
-              {heroData.subtitle}
-            </p>
-            <div className="flex justify-center">
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white hover:text-[#1a3a6b] font-semibold px-8 py-6 text-lg"
-                onClick={() => {
-                  document.getElementById('activities')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                {heroData.button2Text || 'Learn More'}
-              </Button>
+          <div className="relative z-10 w-full max-w-7xl mx-auto px-4 pb-12">
+            <div className="max-w-4xl">
+              <Badge className="mb-4 bg-[#d97706] text-white px-6 py-2 text-sm font-semibold border-0">
+                {heroData.badge}
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight drop-shadow-lg">
+                {heroData.title} <span className="text-[#fbbf24]">{heroData.highlightedWord}</span>
+              </h2>
+              <p className="text-lg md:text-xl text-white mb-6 max-w-2xl drop-shadow-md">
+                {heroData.subtitle}
+              </p>
+              <div>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="bg-white/10 backdrop-blur-sm text-white border-2 border-white hover:bg-white hover:text-[#1a3a6b] font-semibold px-8 py-6 text-lg"
+                  onClick={() => {
+                    document.getElementById('activities')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  {heroData.button2Text || 'Learn More'}
+                </Button>
+              </div>
             </div>
           </div>
 
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="absolute bottom-8 right-8 animate-bounce">
             <ChevronDown className="w-8 h-8 text-white" />
           </div>
         </section>
