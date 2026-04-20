@@ -440,33 +440,27 @@ const Home = () => {
 
                   {donationInfo.receiptContact && (
                     <div className="bg-white/5 p-4 rounded-lg border border-white/20">
-                      <p className="text-sm text-[#fbbf24] mb-2 font-bold">(For Automatic Receipt Generation)</p>
-                      <p className="text-xs text-blue-200 mb-2">For Receipt Contact to our Karyakarta or {donationInfo.receiptContactType} to</p>
+                      <p className="text-sm text-[#fbbf24] mb-2 font-bold">For Receipt Contact</p>
+                      <p className="text-xs text-blue-200 mb-2">Contact our Karyakarta on {donationInfo.receiptContactType}</p>
                       <p className="text-2xl font-bold text-center text-white">{donationInfo.receiptContact}</p>
                     </div>
                   )}
 
                   <div className="text-center mt-4">
                     <p className="text-xs text-blue-200 mb-2">DOWNLOAD OUR APP VSDHAM</p>
-                    <div className="flex justify-center gap-3">
-                      <a href="#" className="inline-block">
-                        <div className="bg-black px-3 py-2 rounded text-xs">
+                    <div className="flex justify-center">
+                      <a 
+                        href="https://play.google.com/store/apps/details?id=com.micm.vsdham" 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block"
+                      >
+                        <div className="bg-black px-4 py-2 rounded hover:bg-gray-800 transition-colors">
                           <div className="flex items-center gap-2">
-                            <span>📱</span>
+                            <span className="text-2xl">▶️</span>
                             <div className="text-left">
-                              <div className="text-[8px]">Download on</div>
-                              <div className="font-bold">App Store</div>
-                            </div>
-                          </div>
-                        </div>
-                      </a>
-                      <a href="#" className="inline-block">
-                        <div className="bg-black px-3 py-2 rounded text-xs">
-                          <div className="flex items-center gap-2">
-                            <span>▶️</span>
-                            <div className="text-left">
-                              <div className="text-[8px]">GET IT ON</div>
-                              <div className="font-bold">Google Play</div>
+                              <div className="text-[10px] text-gray-400">GET IT ON</div>
+                              <div className="font-bold text-white">Google Play</div>
                             </div>
                           </div>
                         </div>
@@ -497,15 +491,7 @@ const Home = () => {
                 
                 <div className="text-center">
                   <p className="text-xl font-bold mb-2">UPI ID to Donate:</p>
-                  <p className="text-3xl font-bold text-[#fbbf24] mb-4">{donationInfo.upiId}</p>
-                  
-                  {donationInfo.receiptContact && (
-                    <>
-                      <p className="text-sm text-blue-200 mb-2">For Receipt Contact to our</p>
-                      <p className="text-sm text-blue-200 mb-2">Karyakarta or Whatsapp to</p>
-                      <p className="text-2xl font-bold text-white">{donationInfo.receiptContact}</p>
-                    </>
-                  )}
+                  <p className="text-3xl font-bold text-[#fbbf24] mb-2">{donationInfo.upiId}</p>
                 </div>
               </Card>
             </div>

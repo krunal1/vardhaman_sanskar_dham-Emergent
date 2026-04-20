@@ -870,10 +870,69 @@ const AdminDashboard = () => {
                       </div>
                       <input
                         className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Branch (e.g., Opera House, Mumbai)"
+                        value={donation.branch || ''}
+                        onChange={(e) => setDonation({ ...donation, branch: e.target.value })}
+                      />
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
                         placeholder="UPI ID"
                         value={donation.upiId}
                         onChange={(e) => setDonation({ ...donation, upiId: e.target.value })}
                       />
+                      <div>
+                        <label className="block text-sm font-medium mb-2">QR Code Image</label>
+                        <div className="flex gap-2">
+                          <input
+                            className="flex-1 px-4 py-2 border rounded-lg"
+                            placeholder="QR Code Image URL or upload"
+                            value={donation.qrCodeImage || ''}
+                            onChange={(e) => setDonation({ ...donation, qrCodeImage: e.target.value })}
+                          />
+                          <Button
+                            type="button"
+                            onClick={async () => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.onchange = async (e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const url = await handleImageUpload(file);
+                                  if (url) {
+                                    setDonation({ ...donation, qrCodeImage: url });
+                                  }
+                                }
+                              };
+                              input.click();
+                            }}
+                            className="bg-blue-500"
+                            disabled={uploadingImage}
+                          >
+                            {uploadingImage ? 'Uploading...' : 'Upload'}
+                          </Button>
+                        </div>
+                        {donation.qrCodeImage && (
+                          <img src={donation.qrCodeImage} alt="QR Code Preview" className="mt-2 h-32 object-contain rounded-lg border" />
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Receipt Contact Number"
+                          value={donation.receiptContact || ''}
+                          onChange={(e) => setDonation({ ...donation, receiptContact: e.target.value })}
+                        />
+                        <select
+                          className="w-full px-4 py-2 border rounded-lg"
+                          value={donation.receiptContactType || 'WhatsApp'}
+                          onChange={(e) => setDonation({ ...donation, receiptContactType: e.target.value })}
+                        >
+                          <option value="WhatsApp">WhatsApp</option>
+                          <option value="Phone">Phone</option>
+                          <option value="SMS">SMS</option>
+                        </select>
+                      </div>
                     </>
                   ) : (
                     <>
@@ -894,9 +953,29 @@ const AdminDashboard = () => {
                           <label className="font-semibold text-gray-700">IFSC Code</label>
                           <p>{donation.ifscCode}</p>
                         </div>
-                        <div className="col-span-2">
+                        <div>
+                          <label className="font-semibold text-gray-700">Branch</label>
+                          <p>{donation.branch || 'Not specified'}</p>
+                        </div>
+                        <div>
                           <label className="font-semibold text-gray-700">UPI ID</label>
                           <p>{donation.upiId}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <label className="font-semibold text-gray-700">QR Code Image</label>
+                          {donation.qrCodeImage ? (
+                            <img src={donation.qrCodeImage} alt="QR Code" className="mt-2 h-32 object-contain border rounded" />
+                          ) : (
+                            <p className="text-gray-500 italic">No QR code uploaded</p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="font-semibold text-gray-700">Receipt Contact</label>
+                          <p>{donation.receiptContact || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="font-semibold text-gray-700">Contact Type</label>
+                          <p>{donation.receiptContactType || 'WhatsApp'}</p>
                         </div>
                       </div>
                     </>
