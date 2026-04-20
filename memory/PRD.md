@@ -105,3 +105,42 @@ Full-stack NGO website with comprehensive admin panel for Vardhaman Sanskar Dham
 - Export donation records (CSV/Excel)
 - SMS notifications
 - Multi-language support
+
+## Latest Updates (2026-04-20)
+
+### ✅ NEW: Separate Donations Page
+- Created dedicated `/donate` route with comprehensive donation information
+- Includes domestic AND foreign donation sections
+- Play Store link integration for mobile app
+- Tax benefits & transparency section
+- Professional design with dark blue/amber theme
+
+### ✅ NEW: Activities Listing Page
+- Created `/activities` route showing ALL activities in grid layout
+- Homepage now shows only 4 featured activities with "View All Activities" button
+- Click on any activity card to view full details
+
+### ✅ NEW: Activity Detail Pages
+- Dynamic route `/activities/{slug}` for individual activity pages
+- Support for:
+  - Multiple images (gallery)
+  - Multiple videos (YouTube embeds + uploaded videos)
+  - Custom fields per activity
+  - Stats display
+  - Full description with proper formatting
+- Call-to-action for donations
+
+### ✅ UPDATED: Backend Activity Schema
+- Added support for `slug`, `category`, `stats`, `images[]`, `videos[]`, `customFields{}`
+- New endpoint: `GET /api/activities/{slug}` for activity detail
+- Auto-generate slug from title if not provided
+
+### ✅ UPDATED: Donation Model
+- Added `playStoreLink` field for Android app download
+- Added `foreignDonation` object for FCRA account details
+- Admin can now edit Play Store link in Donation tab
+
+### ✅ UPDATED: Navigation
+- "Donate Now" button navigates to `/donate` page (instead of scrolling)
+- Activities cards are clickable and navigate to detail pages
+- Proper routing throughout the application

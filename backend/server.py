@@ -119,6 +119,12 @@ class ActivityModel(BaseModel):
     description: str
     icon: str
     image: str
+    slug: Optional[str] = None
+    category: Optional[str] = "Our Work"
+    stats: Optional[List[str]] = []
+    images: Optional[List[str]] = []
+    videos: Optional[List[str]] = []
+    customFields: Optional[dict] = {}
 
 class AboutModel(BaseModel):
     title: str
@@ -157,6 +163,8 @@ class DonationModel(BaseModel):
     qrCodeImage: str = ""
     receiptContact: str = ""
     receiptContactType: str = "WhatsApp"
+    playStoreLink: str = ""
+    foreignDonation: Optional[dict] = None
 
 class ContactMessageModel(BaseModel):
     name: str
@@ -224,14 +232,14 @@ async def seed_admin():
     # Write credentials to test file
     os.makedirs("/app/memory", exist_ok=True)
     with open("/app/memory/test_credentials.md", "w") as f:
-        f.write(f"# Admin Credentials\n\n")
+        f.write("# Admin Credentials\n\n")
         f.write(f"**Email:** {admin_email}\n")
         f.write(f"**Password:** {admin_password}\n")
-        f.write(f"**Role:** admin\n\n")
-        f.write(f"## Endpoints\n")
-        f.write(f"- POST /api/auth/login\n")
-        f.write(f"- GET /api/auth/me\n")
-        f.write(f"- POST /api/auth/logout\n")
+        f.write("**Role:** admin\n\n")
+        f.write("## Endpoints\n")
+        f.write("- POST /api/auth/login\n")
+        f.write("- GET /api/auth/me\n")
+        f.write("- POST /api/auth/logout\n")
 
 @app.on_event("startup")
 async def startup_event():
@@ -381,26 +389,57 @@ async def get_activities():
     activities = await db.activities.find().to_list(100)
     for activity in activities:
         activity["_id"] = str(activity["_id"])
+        # Generate slug if not present
+        if "slug" not in activity or not activity["slug"]:
+            activity["slug"] = activity.get("id") or str(activity["_id"])
     return activities
+
+@api_router.get("/activities/{slug}")
+async def get_activity_detail(slug: str):
+    # Try to find by slug first, then by _id
+    activity = await db.activities.find_one({"slug": slug})
+    if not activity:
+        # Try finding by _id if slug doesn't match
+        try:
+            activity = await db.activities.find_one({"_id": ObjectId(slug)})
+        except Exception:
+            raise HTTPException(status_code=404, detail="Activity not found")
+    
+    if not activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+    
+    activity["_id"] = str(activity["_id"])
+    activity["id"] = activity["_id"]
+    return activity
 
 @api_router.post("/activities")
 async def create_activity(activity: ActivityModel, user: dict = Depends(get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    result = await db.activities.insert_one(activity.dict())
-    return {"id": str(result.inserted_id), **activity.dict()}
+    activity_dict = activity.dict()
+    # Generate slug from title if not provided
+    if not activity_dict.get("slug"):
+        activity_dict["slug"] = activity_dict["title"].lower().replace(" ", "-").replace("/", "-")
+    
+    result = await db.activities.insert_one(activity_dict)
+    return {"id": str(result.inserted_id), **activity_dict}
 
 @api_router.put("/activities/{activity_id}")
 async def update_activity(activity_id: str, activity: ActivityModel, user: dict = Depends(get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    activity_dict = activity.dict()
+    # Generate slug from title if not provided
+    if not activity_dict.get("slug"):
+        activity_dict["slug"] = activity_dict["title"].lower().replace(" ", "-").replace("/", "-")
+    
     await db.activities.update_one(
         {"_id": ObjectId(activity_id)},
-        {"$set": activity.dict()}
+        {"$set": activity_dict}
     )
-    return {"id": activity_id, **activity.dict()}
+    return {"id": activity_id, **activity_dict}
 
 @api_router.delete("/activities/{activity_id}")
 async def delete_activity(activity_id: str, user: dict = Depends(get_current_user)):

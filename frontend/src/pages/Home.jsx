@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, HandHeart, Sparkles, GraduationCap, Calendar, MapPin, Clock, Mail, Phone, MapPinned, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, HandHeart, Sparkles, GraduationCap, Calendar, MapPin, Clock, Mail, Phone, MapPinned, ChevronDown, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -16,6 +17,7 @@ const iconMap = {
 };
 
 const Home = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activities, setActivities] = useState([]);
   const [aboutData, setAboutData] = useState(null);
@@ -142,9 +144,7 @@ const Home = () => {
             </nav>
             <Button 
               className="hidden md:block bg-[#d97706] hover:bg-[#b45309] text-white font-semibold"
-              onClick={() => {
-                document.getElementById('donation')?.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => navigate('/donate')}
             >
               Donate Now
             </Button>
@@ -208,10 +208,14 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {activities.map((activity) => {
+            {activities.slice(0, 4).map((activity) => {
               const IconComponent = iconMap[activity.icon];
               return (
-                <Card key={activity._id} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-200 overflow-hidden">
+                <Card 
+                  key={activity._id} 
+                  className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-200 overflow-hidden cursor-pointer"
+                  onClick={() => navigate(`/activities/${activity.slug || activity.id}`)}
+                >
                   <div className="relative h-48 overflow-hidden">
                     <img 
                       src={activity.image} 
@@ -236,6 +240,18 @@ const Home = () => {
               );
             })}
           </div>
+          
+          {activities.length > 4 && (
+            <div className="text-center mt-8">
+              <Button 
+                onClick={() => navigate('/activities')}
+                className="bg-[#1a3a6b] hover:bg-[#2a4a7b] text-white font-semibold px-8"
+              >
+                View All Activities
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

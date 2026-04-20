@@ -933,6 +933,12 @@ const AdminDashboard = () => {
                           <option value="SMS">SMS</option>
                         </select>
                       </div>
+                      <input
+                        className="w-full px-4 py-2 border rounded-lg"
+                        placeholder="Play Store Link (Android App)"
+                        value={donation.playStoreLink || ''}
+                        onChange={(e) => setDonation({ ...donation, playStoreLink: e.target.value })}
+                      />
                     </>
                   ) : (
                     <>
@@ -977,6 +983,14 @@ const AdminDashboard = () => {
                           <label className="font-semibold text-gray-700">Contact Type</label>
                           <p>{donation.receiptContactType || 'WhatsApp'}</p>
                         </div>
+                        {donation.playStoreLink && (
+                          <div className="col-span-2">
+                            <label className="font-semibold text-gray-700">Play Store Link</label>
+                            <a href={donation.playStoreLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline block truncate">
+                              {donation.playStoreLink}
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </>
                   )}

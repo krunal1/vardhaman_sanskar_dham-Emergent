@@ -5,6 +5,9 @@ import { Toaster } from "./components/ui/sonner";
 import Home from "./pages/Home";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import DonatePage from "./pages/DonatePage";
+import ActivitiesPage from "./pages/ActivitiesPage";
+import ActivityDetailPage from "./pages/ActivityDetailPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -28,6 +31,9 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/donate" element={<DonatePage />} />
+            <Route path="/activities" element={<ActivitiesPage />} />
+            <Route path="/activities/:slug" element={<ActivityDetailPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin/dashboard"
