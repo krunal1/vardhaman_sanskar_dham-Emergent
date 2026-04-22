@@ -214,11 +214,9 @@ const Home = () => {
       {/* Updates Section - Horizontal Scroll */}
       <section className="py-12 px-4 bg-gradient-to-r from-amber-50 to-blue-50">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <Badge className="mb-2 bg-amber-500 text-white">Latest Updates</Badge>
-              <h2 className="text-3xl font-bold text-gray-900">Recent Updates</h2>
-            </div>
+          <div className="mb-8">
+            <Badge className="mb-3 bg-amber-500 text-white text-sm px-4 py-1">Latest Updates</Badge>
+            <h2 className="text-4xl font-bold text-gray-900">Recent Updates</h2>
           </div>
           
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">

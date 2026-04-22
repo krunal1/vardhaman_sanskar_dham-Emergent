@@ -729,6 +729,82 @@ const AdminDashboard = () => {
             </div>
           </TabsContent>
 
+          {/* Updates Tab */}
+          <TabsContent value="updates">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Updates</h2>
+                <Button 
+                  onClick={async () => {
+                    const title = window.prompt('Enter update title:');
+                    const description = window.prompt('Enter update description:');
+                    const date = window.prompt('Enter date (e.g., 2024-12-20):');
+                    const image = window.prompt('Enter image URL (optional):');
+                    const video = window.prompt('Enter video URL (optional):');
+                    
+                    if (title && description && date) {
+                      try {
+                        await api.post('/api/updates', { title, description, date, image, video, category: 'news' });
+                        toast.success('Update added successfully');
+                        fetchAllData();
+                      } catch (error) {
+                        toast.error('Failed to add update');
+                      }
+                    }
+                  }}
+                  className="bg-[#d97706] hover:bg-[#b45309]"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Update
+                </Button>
+              </div>
+
+              <div className="grid gap-4">
+                {updates.map((update, index) => (
+                  <Card key={update.id} className="hover:shadow-lg transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">{update.title}</h3>
+                          <p className="text-sm text-gray-600 mb-2">{update.date}</p>
+                          <p className="text-gray-700 mb-3">{update.description}</p>
+                          {update.image && (
+                            <p className="text-xs text-blue-600 mb-1">Image: {update.image.substring(0, 50)}...</p>
+                          )}
+                          {update.video && (
+                            <p className="text-xs text-purple-600">Video: {update.video.substring(0, 50)}...</p>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={async () => {
+                            if (window.confirm('Delete this update?')) {
+                              try {
+                                await api.delete(`/api/updates/${update.id}`);
+                                toast.success('Update deleted');
+                                fetchAllData();
+                              } catch (error) {
+                                toast.error('Failed to delete update');
+                              }
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {updates.length === 0 && (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>No updates yet. Click "Add Update" to create one.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Gallery Tab */}
           <TabsContent value="gallery" className="space-y-4">
             <div className="flex justify-between items-center">

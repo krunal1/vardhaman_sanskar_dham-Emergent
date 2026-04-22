@@ -56,22 +56,25 @@ const EventDetailPage = () => {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center gap-3 mb-4">
-          <Badge className={event.status === 'upcoming' ? 'bg-green-500' : 'bg-blue-500'}>
+        <div className="mb-6">
+          <Badge className={event.status === 'upcoming' ? 'bg-green-500 text-lg px-4 py-2' : 'bg-blue-500 text-lg px-4 py-2'}>
             {event.status === 'upcoming' ? 'Upcoming' : 'Completed'}
           </Badge>
-          <Badge className="bg-amber-500">Event</Badge>
         </div>
         
         <h1 className="text-4xl font-bold text-gray-900 mb-6">{event.title}</h1>
 
-        {event.image && (
+        {event.image ? (
           <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
             <img 
               src={event.image} 
               alt={event.title}
               className="w-full h-96 object-cover"
             />
+          </div>
+        ) : (
+          <div className="mb-8 rounded-lg overflow-hidden shadow-lg bg-gray-200 flex items-center justify-center h-96">
+            <p className="text-gray-500">No image available</p>
           </div>
         )}
 
@@ -114,35 +117,41 @@ const EventDetailPage = () => {
           </CardContent>
         </Card>
 
-        {event.status === 'upcoming' && (event.googleFormLink || event.whatsappGroupLink) && (
+        {event.status === 'upcoming' && (
           <Card className="bg-gradient-to-r from-blue-50 to-green-50">
             <CardContent className="p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Register for This Event</h2>
-              <div className="flex gap-4 flex-wrap">
-                {event.googleFormLink && (
-                  <a 
-                    href={event.googleFormLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <Button className="bg-blue-500 hover:bg-blue-600">
-                      Register via Google Form
-                    </Button>
-                  </a>
-                )}
-                {event.whatsappGroupLink && (
-                  <a 
-                    href={event.whatsappGroupLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                  >
-                    <Button className="bg-green-500 hover:bg-green-600">
-                      <Phone className="w-4 h-4 mr-2" />
-                      Join WhatsApp Group
-                    </Button>
-                  </a>
-                )}
-              </div>
+              {(event.googleFormLink || event.whatsappGroupLink) ? (
+                <div className="flex gap-4 flex-wrap">
+                  {event.googleFormLink && (
+                    <a 
+                      href={event.googleFormLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      <Button className="bg-blue-500 hover:bg-blue-600">
+                        Register via Google Form
+                      </Button>
+                    </a>
+                  )}
+                  {event.whatsappGroupLink && (
+                    <a 
+                      href={event.whatsappGroupLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      <Button className="bg-green-500 hover:bg-green-600">
+                        <Phone className="w-4 h-4 mr-2" />
+                        Join WhatsApp Group
+                      </Button>
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <div className="text-gray-600 bg-white p-6 rounded-lg border-2 border-dashed border-gray-300">
+                  <p>Registration links will be available soon. Please check back later.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
