@@ -27,6 +27,7 @@ const Home = () => {
   const [contactData, setContactData] = useState(null);
   const [donationInfo, setDonationInfo] = useState(null);
   const [heroData, setHeroData] = useState(null);
+  const [updates, setUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
   
   // Modal state
@@ -50,10 +51,11 @@ const Home = () => {
 
   const fetchData = async () => {
     try {
-      const [activitiesRes, aboutRes, eventsRes, galleryRes, contactRes, donationRes, heroRes] = await Promise.all([
+      const [activitiesRes, aboutRes, eventsRes, updatesRes, galleryRes, contactRes, donationRes, heroRes] = await Promise.all([
         axios.get(`${BACKEND_URL}/api/activities`),
         axios.get(`${BACKEND_URL}/api/about`),
         axios.get(`${BACKEND_URL}/api/events`),
+        axios.get(`${BACKEND_URL}/api/updates`),
         axios.get(`${BACKEND_URL}/api/gallery`),
         axios.get(`${BACKEND_URL}/api/contact`),
         axios.get(`${BACKEND_URL}/api/donation`),
@@ -63,6 +65,7 @@ const Home = () => {
       setActivities(activitiesRes.data || []);
       setAboutData(aboutRes.data);
       setEvents(eventsRes.data || []);
+      setUpdates(updatesRes.data || []);
       setGalleryImages(galleryRes.data || []);
       setContactData(contactRes.data);
       setDonationInfo(donationRes.data);
@@ -219,19 +222,18 @@ const Home = () => {
           </div>
           
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-            {[
-              { title: "New Initiative Launched", desc: "Animal welfare program expanded to 5 new locations", date: "2 days ago", color: "bg-blue-500" },
-              { title: "Community Event Success", desc: "500+ families benefited from recent food distribution drive", date: "5 days ago", color: "bg-green-500" },
-              { title: "Education Update", desc: "Tapovan Vidyalay achieves 100% exam results", date: "1 week ago", color: "bg-purple-500" },
-              { title: "Upcoming Paryushan", desc: "Annual Paryushan Aradhana celebrations from Aug 15-22", date: "Coming Soon", color: "bg-amber-500" }
-            ].map((update, index) => (
-              <Card key={index} className="min-w-[320px] hover:shadow-lg transition-shadow">
+            {updates.map((update) => (
+              <Card 
+                key={update.id} 
+                className="min-w-[320px] hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => navigate(`/updates/${update.id}`)}
+              >
                 <CardContent className="p-6">
-                  <div className={`w-12 h-12 ${update.color} rounded-full flex items-center justify-center mb-4`}>
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-4">
                     <Sparkles className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">{update.title}</h3>
-                  <p className="text-gray-600 text-sm mb-3">{update.desc}</p>
+                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">{update.description}</p>
                   <p className="text-xs text-gray-500 font-semibold">{update.date}</p>
                 </CardContent>
               </Card>
@@ -334,7 +336,11 @@ const Home = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
-              <Card key={event._id} className="group overflow-hidden hover:shadow-xl transition-all duration-300">
+              <Card 
+                key={event._id} 
+                className="group overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+                onClick={() => navigate(`/events/${event.id}`)}
+              >
                 {event.image && (
                   <div className="relative h-48 overflow-hidden">
                     <img 

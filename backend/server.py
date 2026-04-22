@@ -144,6 +144,13 @@ class EventModel(BaseModel):
     googleFormLink: str = ""
     whatsappGroupLink: str = ""
 
+class UpdateModel(BaseModel):
+    title: str
+    description: str
+    image: str = ""
+    date: str
+    category: str = "news"
+
 class GalleryImageModel(BaseModel):
     url: str
     title: str
@@ -483,7 +490,20 @@ async def get_events():
     events = await db.events.find().to_list(100)
     for event in events:
         event["_id"] = str(event["_id"])
+        event["id"] = event["_id"]
     return events
+
+@api_router.get("/events/{event_id}")
+async def get_event_detail(event_id: str):
+    try:
+        event = await db.events.find_one({"_id": ObjectId(event_id)})
+        if event:
+            event["_id"] = str(event["_id"])
+            event["id"] = event["_id"]
+            return event
+    except Exception:
+        pass
+    raise HTTPException(status_code=404, detail="Event not found")
 
 @api_router.post("/events")
 async def create_event(event: EventModel, user: dict = Depends(get_current_user)):
@@ -511,6 +531,55 @@ async def delete_event(event_id: str, user: dict = Depends(get_current_user)):
     
     await db.events.delete_one({"_id": ObjectId(event_id)})
     return {"message": "Event deleted successfully"}
+
+# ============ Updates/News Routes ============
+
+@api_router.get("/updates")
+async def get_updates():
+    updates = await db.updates.find().to_list(100)
+    for update in updates:
+        update["_id"] = str(update["_id"])
+        update["id"] = update["_id"]
+    return updates
+
+@api_router.get("/updates/{update_id}")
+async def get_update_detail(update_id: str):
+    try:
+        update = await db.updates.find_one({"_id": ObjectId(update_id)})
+        if update:
+            update["_id"] = str(update["_id"])
+            update["id"] = update["_id"]
+            return update
+    except Exception:
+        pass
+    raise HTTPException(status_code=404, detail="Update not found")
+
+@api_router.post("/updates")
+async def create_update(update: UpdateModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    result = await db.updates.insert_one(update.dict())
+    return {"id": str(result.inserted_id), **update.dict()}
+
+@api_router.put("/updates/{update_id}")
+async def update_update(update_id: str, update: UpdateModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.updates.update_one(
+        {"_id": ObjectId(update_id)},
+        {"$set": update.dict()}
+    )
+    return {"id": update_id, **update.dict()}
+
+@api_router.delete("/updates/{update_id}")
+async def delete_update(update_id: str, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.updates.delete_one({"_id": ObjectId(update_id)})
+    return {"message": "Update deleted successfully"}
 
 # ============ Gallery Routes ============
 

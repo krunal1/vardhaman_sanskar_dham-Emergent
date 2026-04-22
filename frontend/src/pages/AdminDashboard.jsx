@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Separator } from '../components/ui/separator';
 import {
   LogOut, Activity, Info, Calendar, Image, Phone, CreditCard,
-  Plus, Edit, Trash2, Save, User, Users, MessageSquare, DollarSign
+  Plus, Edit, Trash2, Save, User, Users, MessageSquare, DollarSign, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProfileTab, UsersTab, MessagesTab, DonationsTab, HeroTab } from '../components/AdminTabs';
@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   const [activities, setActivities] = useState([]);
   const [about, setAbout] = useState(null);
   const [events, setEvents] = useState([]);
+  const [updates, setUpdates] = useState([]);
   const [gallery, setGallery] = useState([]);
   const [contact, setContact] = useState(null);
   const [donation, setDonation] = useState(null);
@@ -302,6 +303,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="events" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
               <Calendar className="w-4 h-4 mr-1" />
               Events
+            </TabsTrigger>
+            <TabsTrigger value="updates" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+              <Sparkles className="w-4 h-4 mr-1" />
+              Updates
             </TabsTrigger>
             <TabsTrigger value="gallery" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
               <Image className="w-4 h-4 mr-1" />

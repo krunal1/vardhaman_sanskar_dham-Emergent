@@ -11,6 +11,8 @@ import ActivityDetailPage from "./pages/ActivityDetailPage";
 import TapovanPage from "./pages/TapovaPage";
 import GurudevPage from "./pages/GurudevPage";
 import MediaPage from "./pages/MediaPage";
+import UpdateDetailPage from "./pages/UpdateDetailPage";
+import EventDetailPage from "./pages/EventDetailPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -37,6 +39,8 @@ function App() {
             <Route path="/donate" element={<DonatePage />} />
             <Route path="/activities" element={<ActivitiesPage />} />
             <Route path="/activities/:slug" element={<ActivityDetailPage />} />
+            <Route path="/updates/:id" element={<UpdateDetailPage />} />
+            <Route path="/events/:id" element={<EventDetailPage />} />
             <Route path="/tapovan" element={<TapovanPage />} />
             <Route path="/gurudev" element={<GurudevPage />} />
             <Route path="/media" element={<MediaPage />} />
