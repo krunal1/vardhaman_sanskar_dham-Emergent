@@ -8,6 +8,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import DonatePage from "./pages/DonatePage";
 import ActivitiesPage from "./pages/ActivitiesPage";
 import ActivityDetailPage from "./pages/ActivityDetailPage";
+import TapovanPage from "./pages/TapovaPage";
+import GurudevPage from "./pages/GurudevPage";
+import MediaPage from "./pages/MediaPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -34,6 +37,9 @@ function App() {
             <Route path="/donate" element={<DonatePage />} />
             <Route path="/activities" element={<ActivitiesPage />} />
             <Route path="/activities/:slug" element={<ActivityDetailPage />} />
+            <Route path="/tapovan" element={<TapovanPage />} />
+            <Route path="/gurudev" element={<GurudevPage />} />
+            <Route path="/media" element={<MediaPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin/dashboard"

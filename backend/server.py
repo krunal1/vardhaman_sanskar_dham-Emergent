@@ -145,6 +145,7 @@ class GalleryImageModel(BaseModel):
     url: str
     title: str
     category: str
+    type: str = "image"  # "image" or "video"
 
 class ContactModel(BaseModel):
     name: str
@@ -164,7 +165,9 @@ class DonationModel(BaseModel):
     receiptContact: str = ""
     receiptContactType: str = "WhatsApp"
     playStoreLink: str = ""
-    foreignDonation: Optional[dict] = None
+    declarationPdf: str = ""
+    additionalBanks: Optional[List[dict]] = []
+    foreignDonation: Optional[dict] = {}
 
 class ContactMessageModel(BaseModel):
     name: str

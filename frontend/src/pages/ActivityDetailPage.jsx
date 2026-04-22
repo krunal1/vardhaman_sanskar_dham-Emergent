@@ -221,7 +221,9 @@ const ActivityDetailPage = () => {
                 Donate Now
               </Button>
               <Button 
-                onClick={() => navigate('/contact')} 
+                onClick={() => {
+                  window.location.href = '/#contact';
+                }} 
                 variant="outline" 
                 className="text-white border-white/30 hover:bg-white/10"
               >

@@ -124,16 +124,16 @@ const Home = () => {
                 </button>
                 <div className="absolute top-full left-0 mt-2 w-56 bg-white shadow-xl rounded-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                   <div className="py-2">
-                    <a href="#tapovan-vidyalay" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
+                    <a href="/tapovan" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
                       Tapovan Vidyalay
                     </a>
-                    <a href="#tapovan-sanskardham" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
+                    <a href="/tapovan" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
                       Tapovan Sanskardham
                     </a>
-                    <a href="#gurudev" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
+                    <a href="/gurudev" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
                       Gurudev
                     </a>
-                    <a href="#media" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
+                    <a href="/media" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-[#1a3a6b] transition-colors">
                       Media & Videos
                     </a>
                   </div>

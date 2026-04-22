@@ -310,9 +310,9 @@ const AdminDashboard = () => {
               <Phone className="w-4 h-4 mr-1" />
               Contact
             </TabsTrigger>
-            <TabsTrigger value="donation" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+            <TabsTrigger value="donation" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
               <CreditCard className="w-4 h-4 mr-1" />
-              Donation
+              Bank Details
             </TabsTrigger>
             <TabsTrigger value="profile" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
               <User className="w-4 h-4 mr-1" />
@@ -326,9 +326,9 @@ const AdminDashboard = () => {
               <MessageSquare className="w-4 h-4 mr-1" />
               Messages
             </TabsTrigger>
-            <TabsTrigger value="donations" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+            <TabsTrigger value="donations" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
               <DollarSign className="w-4 h-4 mr-1" />
-              Donations
+              Donation Records
             </TabsTrigger>
           </TabsList>
 
@@ -818,7 +818,7 @@ const AdminDashboard = () => {
           {/* Donation Tab */}
           <TabsContent value="donation" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Donation Details</h2>
+              <h2 className="text-2xl font-bold text-[#1a3a6b]">Update Bank Details</h2>
               {!editMode.donation ? (
                 <Button onClick={() => setEditMode({ ...editMode, donation: true })} className="bg-[#1a3a6b]">
                   <Edit className="w-4 h-4 mr-2" />
