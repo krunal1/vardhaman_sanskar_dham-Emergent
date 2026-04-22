@@ -45,9 +45,11 @@ const ActivitiesPage = () => {
                 <h1 className="text-xl font-bold text-red-600">VARDHMAN SANSKARDHAM</h1>
               </div>
             </a>
-            <Button onClick={() => window.location.href = '/'} variant="outline" className="text-white border-white/30 hover:bg-white/10">
-              Back to Home
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => window.location.href = '/'} variant="outline" className="text-white border-white/30 hover:bg-white/10">
+                Back to Home
+              </Button>
+            </div>
           </div>
         </div>
       </div>

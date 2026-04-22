@@ -74,6 +74,24 @@ const UpdateDetailPage = () => {
           </div>
         )}
 
+        {update.video && (
+          <div className="mb-8 rounded-lg overflow-hidden">
+            {update.video.includes('youtube') || update.video.includes('youtu.be') ? (
+              <iframe
+                src={update.video.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                className="w-full h-96"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            ) : (
+              <video src={update.video} controls className="w-full h-96">
+                Your browser does not support the video tag.
+              </video>
+            )}
+          </div>
+        )}
+
         <Card>
           <CardContent className="p-8">
             <div className="prose prose-lg max-w-none">

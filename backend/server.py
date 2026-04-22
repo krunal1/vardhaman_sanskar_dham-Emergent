@@ -148,6 +148,7 @@ class UpdateModel(BaseModel):
     title: str
     description: str
     image: str = ""
+    video: str = ""
     date: str
     category: str = "news"
 

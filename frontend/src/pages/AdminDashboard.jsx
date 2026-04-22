@@ -287,8 +287,8 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-11 gap-2 bg-white p-2 rounded-lg shadow text-xs">
-            <TabsTrigger value="hero" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white">
+          <TabsList className="w-full overflow-x-auto flex flex-nowrap bg-white p-2 rounded-lg shadow text-xs">
+            <TabsTrigger value="hero" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap flex-shrink-0">
               <Activity className="w-4 h-4 mr-1" />
               Hero
             </TabsTrigger>

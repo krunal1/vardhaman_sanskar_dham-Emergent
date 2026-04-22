@@ -77,12 +77,9 @@ const ActivityDetailPage = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#1a3a6b] via-transparent to-transparent"></div>
             <div className="absolute bottom-0 left-0 right-0 p-8">
-              <div className="flex items-center gap-3 mb-4">
-                <Heart className="w-8 h-8 text-amber-400" />
-                <Badge className="bg-amber-500/20 text-amber-400 border-amber-400/30">
-                  {activity.category || 'Our Work'}
-                </Badge>
-              </div>
+              <Badge className="bg-amber-500/20 text-amber-400 border-amber-400/30 mb-4">
+                {activity.category || 'Our Work'}
+              </Badge>
               <h1 className="text-4xl sm:text-5xl font-bold text-white">{activity.title}</h1>
             </div>
           </div>
@@ -90,12 +87,9 @@ const ActivityDetailPage = () => {
 
         {!activity.image && (
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <Heart className="w-8 h-8 text-amber-400" />
-              <Badge className="bg-amber-500/20 text-amber-400 border-amber-400/30">
-                {activity.category || 'Our Work'}
-              </Badge>
-            </div>
+            <Badge className="bg-amber-500/20 text-amber-400 border-amber-400/30 mb-4">
+              {activity.category || 'Our Work'}
+            </Badge>
             <h1 className="text-4xl sm:text-5xl font-bold text-white">{activity.title}</h1>
           </div>
         )}
@@ -253,7 +247,13 @@ const ActivityDetailPage = () => {
               </Button>
               <Button 
                 onClick={() => {
-                  window.location.href = '/#contact';
+                  navigate('/');
+                  setTimeout(() => {
+                    const contactSection = document.getElementById('contact');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 100);
                 }} 
                 variant="outline" 
                 className="text-white border-white/30 hover:bg-white/10"
