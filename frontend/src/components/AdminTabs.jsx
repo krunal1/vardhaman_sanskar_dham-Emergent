@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Users, MessageSquare, DollarSign } from 'lucide-react';
+import { User, Users, MessageSquare, DollarSign, Sparkles, Calendar, Upload } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { toast } from 'sonner';
@@ -628,6 +628,450 @@ export const HeroTab = ({ api, handleImageUpload, uploadingImage }) => {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+};
+
+
+export const UpdatesTab = ({ api }) => {
+  const [updates, setUpdates] = useState([]);
+  const [editingUpdate, setEditingUpdate] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    date: '',
+    image: '',
+    video: '',
+    category: 'news'
+  });
+
+  useEffect(() => {
+    fetchUpdates();
+  }, []);
+
+  const fetchUpdates = async () => {
+    try {
+      const { data } = await api.get('/api/updates');
+      setUpdates(data);
+    } catch (error) {
+      console.error('Error fetching updates:', error);
+    }
+  };
+
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const { data } = await api.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return data.url;
+    } catch (error) {
+      toast.error('File upload failed');
+      throw error;
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const url = await uploadFile(file);
+        setFormData({ ...formData, image: url });
+        toast.success('Image uploaded');
+      } catch (error) {
+        console.error('Upload error:', error);
+      }
+    }
+  };
+
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const url = await uploadFile(file);
+        setFormData({ ...formData, video: url });
+        toast.success('Video uploaded');
+      } catch (error) {
+        console.error('Upload error:', error);
+      }
+    }
+  };
+
+  const saveUpdate = async () => {
+    try {
+      if (editingUpdate) {
+        await api.put(`/api/updates/${editingUpdate.id}`, formData);
+        toast.success('Update updated successfully');
+      } else {
+        await api.post('/api/updates', formData);
+        toast.success('Update created successfully');
+      }
+      setFormData({ title: '', description: '', date: '', image: '', video: '', category: 'news' });
+      setEditingUpdate(null);
+      fetchUpdates();
+    } catch (error) {
+      toast.error('Failed to save update');
+      console.error('Save error:', error);
+    }
+  };
+
+  const deleteUpdate = async (id) => {
+    if (window.confirm('Delete this update?')) {
+      try {
+        await api.delete(`/api/updates/${id}`);
+        toast.success('Update deleted');
+        fetchUpdates();
+      } catch (error) {
+        toast.error('Failed to delete update');
+      }
+    }
+  };
+
+  const startEdit = (update) => {
+    setEditingUpdate(update);
+    setFormData({
+      title: update.title,
+      description: update.description,
+      date: update.date,
+      image: update.image || '',
+      video: update.video || '',
+      category: update.category || 'news'
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingUpdate(null);
+    setFormData({ title: '', description: '', date: '', image: '', video: '', category: 'news' });
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Updates</h2>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>{editingUpdate ? 'Edit Update' : 'Create New Update'}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <input
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="Title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+          <input
+            type="date"
+            className="w-full px-4 py-2 border rounded-lg"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+          />
+          <textarea
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="Description"
+            rows="4"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+          <div>
+            <label className="block text-sm font-semibold mb-2">Image</label>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="flex-1 px-4 py-2 border rounded-lg"
+              />
+              {formData.image && (
+                <img src={formData.image} alt="Preview" className="w-20 h-20 object-cover rounded" />
+              )}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold mb-2">Video (or YouTube URL)</label>
+            <input
+              type="text"
+              className="w-full px-4 py-2 border rounded-lg mb-2"
+              placeholder="YouTube URL"
+              value={formData.video}
+              onChange={(e) => setFormData({ ...formData, video: e.target.value })}
+            />
+            <input
+              type="file"
+              accept="video/*"
+              onChange={handleVideoUpload}
+              className="w-full px-4 py-2 border rounded-lg"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={saveUpdate} className="bg-green-600 hover:bg-green-700">
+              {editingUpdate ? 'Update' : 'Create'}
+            </Button>
+            {editingUpdate && (
+              <Button onClick={cancelEdit} variant="outline">
+                Cancel
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-4">
+        {updates.map((update) => (
+          <Card key={update.id}>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold mb-2">{update.title}</h3>
+                  <p className="text-sm text-gray-500 mb-2">{update.date}</p>
+                  <p className="text-gray-700">{update.description}</p>
+                  {update.image && (
+                    <img src={update.image} alt={update.title} className="mt-3 w-32 h-32 object-cover rounded" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => startEdit(update)}>Edit</Button>
+                  <Button size="sm" variant="destructive" onClick={() => deleteUpdate(update.id)}>Delete</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export const EventsTab = ({ api }) => {
+  const [events, setEvents] = useState([]);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    date: '',
+    time: '',
+    location: '',
+    description: '',
+    status: 'upcoming',
+    image: '',
+    googleFormLink: '',
+    whatsappGroupLink: ''
+  });
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const { data } = await api.get('/api/events');
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const { data } = await api.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return data.url;
+    } catch (error) {
+      toast.error('File upload failed');
+      throw error;
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const url = await uploadFile(file);
+        setFormData({ ...formData, image: url });
+        toast.success('Image uploaded');
+      } catch (error) {
+        console.error('Upload error:', error);
+      }
+    }
+  };
+
+  const saveEvent = async () => {
+    try {
+      if (editingEvent) {
+        await api.put(`/api/events/${editingEvent.id}`, formData);
+        toast.success('Event updated successfully');
+      } else {
+        await api.post('/api/events', formData);
+        toast.success('Event created successfully');
+      }
+      setFormData({
+        title: '', date: '', time: '', location: '', description: '',
+        status: 'upcoming', image: '', googleFormLink: '', whatsappGroupLink: ''
+      });
+      setEditingEvent(null);
+      fetchEvents();
+    } catch (error) {
+      toast.error('Failed to save event');
+      console.error('Save error:', error);
+    }
+  };
+
+  const deleteEvent = async (id) => {
+    if (window.confirm('Delete this event?')) {
+      try {
+        await api.delete(`/api/events/${id}`);
+        toast.success('Event deleted');
+        fetchEvents();
+      } catch (error) {
+        toast.error('Failed to delete event');
+      }
+    }
+  };
+
+  const startEdit = (event) => {
+    setEditingEvent(event);
+    setFormData({
+      title: event.title,
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      description: event.description,
+      status: event.status || 'upcoming',
+      image: event.image || '',
+      googleFormLink: event.googleFormLink || '',
+      whatsappGroupLink: event.whatsappGroupLink || ''
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingEvent(null);
+    setFormData({
+      title: '', date: '', time: '', location: '', description: '',
+      status: 'upcoming', image: '', googleFormLink: '', whatsappGroupLink: ''
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Events</h2>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>{editingEvent ? 'Edit Event' : 'Create New Event'}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <input
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="Event Title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="date"
+              className="w-full px-4 py-2 border rounded-lg"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            />
+            <input
+              type="time"
+              className="w-full px-4 py-2 border rounded-lg"
+              value={formData.time}
+              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+            />
+          </div>
+          <input
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="Location"
+            value={formData.location}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+          />
+          <textarea
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="Description"
+            rows="4"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+          <select
+            className="w-full px-4 py-2 border rounded-lg"
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+          >
+            <option value="upcoming">Upcoming</option>
+            <option value="completed">Completed</option>
+          </select>
+          <div>
+            <label className="block text-sm font-semibold mb-2">Event Image</label>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="flex-1 px-4 py-2 border rounded-lg"
+              />
+              {formData.image && (
+                <img src={formData.image} alt="Preview" className="w-20 h-20 object-cover rounded" />
+              )}
+            </div>
+          </div>
+          <input
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="Google Form Link (for registration)"
+            value={formData.googleFormLink}
+            onChange={(e) => setFormData({ ...formData, googleFormLink: e.target.value })}
+          />
+          <input
+            className="w-full px-4 py-2 border rounded-lg"
+            placeholder="WhatsApp Group Link"
+            value={formData.whatsappGroupLink}
+            onChange={(e) => setFormData({ ...formData, whatsappGroupLink: e.target.value })}
+          />
+          <div className="flex gap-2">
+            <Button onClick={saveEvent} className="bg-green-600 hover:bg-green-700">
+              {editingEvent ? 'Update' : 'Create'}
+            </Button>
+            {editingEvent && (
+              <Button onClick={cancelEdit} variant="outline">
+                Cancel
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-4">
+        {events.map((event) => (
+          <Card key={event.id}>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-xl font-bold">{event.title}</h3>
+                    <span className={`px-2 py-1 rounded text-xs ${event.status === 'upcoming' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {event.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-2">{event.date} | {event.time}</p>
+                  <p className="text-gray-600 mb-2">{event.location}</p>
+                  <p className="text-sm text-gray-700">{event.description}</p>
+                  {event.image && (
+                    <img src={event.image} alt={event.title} className="mt-3 w-32 h-32 object-cover rounded" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => startEdit(event)}>Edit</Button>
+                  <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)}>Delete</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };
