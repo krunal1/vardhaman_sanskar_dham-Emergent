@@ -622,6 +622,16 @@ const AdminDashboard = () => {
                             setEvents(newEvents);
                           }}
                         />
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Event Image URL"
+                          value={event.image || ''}
+                          onChange={(e) => {
+                            const newEvents = [...events];
+                            newEvents[index].image = e.target.value;
+                            setEvents(newEvents);
+                          }}
+                        />
                         <textarea
                           className="w-full px-4 py-2 border rounded-lg"
                           placeholder="Description"
@@ -645,6 +655,26 @@ const AdminDashboard = () => {
                           <option value="upcoming">Upcoming</option>
                           <option value="completed">Completed</option>
                         </select>
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Google Form Link (for registration)"
+                          value={event.googleFormLink || ''}
+                          onChange={(e) => {
+                            const newEvents = [...events];
+                            newEvents[index].googleFormLink = e.target.value;
+                            setEvents(newEvents);
+                          }}
+                        />
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="WhatsApp Group Link"
+                          value={event.whatsappGroupLink || ''}
+                          onChange={(e) => {
+                            const newEvents = [...events];
+                            newEvents[index].whatsappGroupLink = e.target.value;
+                            setEvents(newEvents);
+                          }}
+                        />
                         <div className="flex gap-2">
                           <Button onClick={() => saveEvent(event, index)} className="bg-green-600 hover:bg-green-700">
                             <Save className="w-4 h-4 mr-2" />

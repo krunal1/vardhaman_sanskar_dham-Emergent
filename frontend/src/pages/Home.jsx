@@ -251,8 +251,8 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {activities.slice(0, 4).map((activity) => {
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {activities.map((activity) => {
               const IconComponent = iconMap[activity.icon];
               return (
                 <Card 
@@ -260,42 +260,26 @@ const Home = () => {
                   className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-200 overflow-hidden cursor-pointer"
                   onClick={() => navigate(`/activities/${activity.slug || activity.id}`)}
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative h-32 overflow-hidden">
                     <img 
                       src={activity.image} 
                       alt={activity.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1a3a6b]/80 to-transparent"></div>
-                    <div className="absolute bottom-3 left-3 text-white">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-10 h-10 bg-[#d97706] rounded-full flex items-center justify-center">
-                          <IconComponent className="w-5 h-5" />
-                        </div>
-                        <h3 className="text-xl font-bold">{activity.title}</h3>
+                    <div className="absolute bottom-2 left-2">
+                      <div className="w-8 h-8 bg-[#d97706] rounded-full flex items-center justify-center">
+                        <IconComponent className="w-4 h-4 text-white" />
                       </div>
-                      <p className="text-blue-100 text-sm font-medium">{activity.subtitle}</p>
                     </div>
                   </div>
-                  <CardContent className="p-5">
-                    <p className="text-gray-600 leading-relaxed text-sm">{activity.description}</p>
+                  <CardContent className="p-3">
+                    <h3 className="text-sm font-bold text-gray-900 line-clamp-2">{activity.title}</h3>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
-          
-          {activities.length > 4 && (
-            <div className="text-center mt-8">
-              <Button 
-                onClick={() => navigate('/activities')}
-                className="bg-[#1a3a6b] hover:bg-[#2a4a7b] text-white font-semibold px-8"
-              >
-                View All Activities
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-          )}
         </div>
       </section>
 
@@ -337,48 +321,76 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Events Section */}
+      {/* Events Section - Recent & Upcoming */}
       <section id="events" className="py-16 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-amber-100 text-amber-800 px-4 py-1 border-0">What's Happening</Badge>
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Upcoming Events</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Join us in our upcoming programs
+            <Badge className="mb-4 bg-green-100 text-green-800 px-4 py-1 border-0">Events</Badge>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Recent & Upcoming Events</h2>
+            <p className="text-lg text-gray-600">
+              Stay updated with our latest activities and upcoming programs
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => (
-              <Card key={event._id} className={`hover:shadow-xl transition-shadow border-2 ${event.status === 'upcoming' ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200 opacity-75'}`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <Badge className={event.status === 'upcoming' ? 'bg-green-500 border-0' : 'bg-gray-400 border-0'}>
-                      {event.status === 'upcoming' ? 'Upcoming' : 'Completed'}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-xl text-gray-900">{event.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <Calendar className="w-4 h-4 mr-2 text-[#1a3a6b]" />
-                      <span>{new Date(event.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              <Card key={event._id} className="group overflow-hidden hover:shadow-xl transition-all duration-300">
+                {event.image && (
+                  <div className="relative h-48 overflow-hidden">
+                    <img 
+                      src={event.image} 
+                      alt={event.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 right-3">
+                      <Badge className={event.status === 'upcoming' ? 'bg-green-500' : 'bg-blue-500'}>
+                        {event.status === 'upcoming' ? 'Upcoming' : 'Completed'}
+                      </Badge>
                     </div>
-                    <div className="flex items-center text-gray-600 text-sm">
-                      <Clock className="w-4 h-4 mr-2 text-[#1a3a6b]" />
+                  </div>
+                )}
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{event.title}</h3>
+                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      <span>{event.date}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
                       <span>{event.time}</span>
                     </div>
-                    <div className="flex items-start text-gray-600 text-sm">
-                      <MapPin className="w-4 h-4 mr-2 text-[#1a3a6b] flex-shrink-0 mt-0.5" />
-                      <span className="text-sm">{event.location}</span>
-                    </div>
                   </div>
-                  <p className="text-gray-600 text-sm mb-4">{event.description}</p>
-                  {event.status === 'upcoming' && (
-                    <Button className="w-full bg-[#1a3a6b] hover:bg-[#0f2244] text-white font-semibold">
-                      Register Now
-                    </Button>
+                  <div className="flex items-center gap-1 text-sm text-gray-600 mb-4">
+                    <MapPin className="w-4 h-4" />
+                    <span>{event.location}</span>
+                  </div>
+                  <p className="text-gray-700 text-sm mb-4 line-clamp-3">{event.description}</p>
+                  
+                  {event.status === 'upcoming' && (event.googleFormLink || event.whatsappGroupLink) && (
+                    <div className="flex gap-2 pt-2 border-t">
+                      {event.googleFormLink && (
+                        <a 
+                          href={event.googleFormLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <span className="text-sm font-semibold">Register</span>
+                        </a>
+                      )}
+                      {event.whatsappGroupLink && (
+                        <a 
+                          href={event.whatsappGroupLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <Phone className="w-4 h-4" />
+                          <span className="text-sm font-semibold">WhatsApp</span>
+                        </a>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>

@@ -140,6 +140,9 @@ class EventModel(BaseModel):
     location: str
     description: str
     status: str = "upcoming"
+    image: str = ""
+    googleFormLink: str = ""
+    whatsappGroupLink: str = ""
 
 class GalleryImageModel(BaseModel):
     url: str
