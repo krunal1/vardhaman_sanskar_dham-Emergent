@@ -205,6 +205,37 @@ const ActivityDetailPage = () => {
           </Card>
         )}
 
+        {/* PDFs */}
+        {activity.pdfs && activity.pdfs.length > 0 && (
+          <Card className="bg-white/10 backdrop-blur-md border-white/20 mb-8">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-bold text-white mb-6">Documents & Resources</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {activity.pdfs.map((pdf, index) => (
+                  <a
+                    key={index}
+                    href={pdf.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white/5 border border-white/20 rounded-lg p-4 hover:bg-white/10 transition-colors flex items-center gap-4 group"
+                  >
+                    <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-bold text-xs">PDF</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold truncate group-hover:text-amber-400 transition-colors">
+                        {pdf.title || `Document ${index + 1}`}
+                      </p>
+                      <p className="text-gray-400 text-sm">Click to download</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                  </a>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* CTA Section */}
         <Card className="bg-gradient-to-r from-amber-500/20 to-amber-600/20 border-amber-400/30">
           <CardContent className="p-8 text-center">

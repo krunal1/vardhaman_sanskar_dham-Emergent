@@ -106,6 +106,43 @@ Full-stack NGO website with comprehensive admin panel for Vardhaman Sanskar Dham
 - SMS notifications
 - Multi-language support
 
+## Latest Updates (2026-04-22)
+
+### ✅ Gallery Video Support with Zoom Modal
+- Gallery now supports both images AND videos
+- Admin can add videos via "Add Image/Video" button
+- Videos display with play icon overlay
+- Click any image/video to open in full-screen modal
+- Modal supports:
+  - Image zoom view
+  - Video playback (YouTube embeds + uploaded videos)
+  - Close with X button or click outside
+
+### ✅ PDF Support in Activity Detail Pages
+- Activities can now have multiple PDFs attached
+- Backend schema updated: `pdfs: [{title, url}]`
+- PDF download section displays on activity detail pages
+- Clean card UI with download links
+
+### ✅ Foreign Bank Details Admin UI
+- Admin can now add foreign donation details (FCRA)
+- Fields: Bank Name, Account Name, Account Number, SWIFT Code, IFSC
+- Separate blue-highlighted section in Bank Details tab
+- Data syncs to `/donate` page automatically
+
+### ✅ Horizontal Scroll Updates Section
+- New "Latest Updates" section on homepage
+- Horizontal scrollable cards showing recent news/activities
+- 4 sample updates displayed with color-coded icons
+- Located between hero section and activities
+
+### ✅ Admin Tab Naming Fixed
+- "Donation" → renamed to "Bank Details"
+- "Donations" → renamed to "Donation Records"
+- Tab heading: "Update Bank Details"
+
+---
+
 ## Latest Updates (2026-04-20)
 
 ### ✅ NEW: Separate Donations Page

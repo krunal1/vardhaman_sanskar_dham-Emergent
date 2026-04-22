@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Badge } from '../components/ui/badge';
 import { Alert, AlertDescription } from '../components/ui/alert';
+import { Separator } from '../components/ui/separator';
 import {
   LogOut, Activity, Info, Calendar, Image, Phone, CreditCard,
   Plus, Edit, Trash2, Save, User, Users, MessageSquare, DollarSign
@@ -699,14 +700,31 @@ const AdminDashboard = () => {
               <h2 className="text-2xl font-bold text-[#1a3a6b]">Manage Gallery</h2>
               <Button onClick={addGalleryImage} className="bg-[#d97706] hover:bg-[#b45309]">
                 <Plus className="w-4 h-4 mr-2" />
-                Add Image
+                Add Image/Video
               </Button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {gallery.map((image, index) => (
                 <Card key={index} className="group relative overflow-hidden">
-                  <img src={image.url} alt={image.title} className="w-full h-48 object-cover" />
+                  {image.type === 'video' ? (
+                    <div className="relative w-full h-48 bg-black">
+                      <div className="absolute inset-0 flex items-center justify-center z-10">
+                        <span className="bg-red-600 text-white px-3 py-1 rounded text-xs font-bold">VIDEO</span>
+                      </div>
+                      {image.url.includes('youtube') || image.url.includes('youtu.be') ? (
+                        <img
+                          src={`https://img.youtube.com/vi/${image.url.split('v=')[1]?.split('&')[0] || image.url.split('/').pop()}/maxresdefault.jpg`}
+                          alt={image.title}
+                          className="w-full h-48 object-cover"
+                        />
+                      ) : (
+                        <video src={image.url} className="w-full h-48 object-cover" />
+                      )}
+                    </div>
+                  ) : (
+                    <img src={image.url} alt={image.title} className="w-full h-48 object-cover" />
+                  )}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <Button
                       size="sm"
@@ -939,6 +957,58 @@ const AdminDashboard = () => {
                         value={donation.playStoreLink || ''}
                         onChange={(e) => setDonation({ ...donation, playStoreLink: e.target.value })}
                       />
+                      
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Foreign Donation Details (FCRA)</h3>
+                      <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Foreign Bank Name"
+                          value={donation.foreignDonation?.bankName || ''}
+                          onChange={(e) => setDonation({ 
+                            ...donation, 
+                            foreignDonation: { ...donation.foreignDonation, bankName: e.target.value }
+                          })}
+                        />
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="Foreign Account Name"
+                          value={donation.foreignDonation?.accountName || ''}
+                          onChange={(e) => setDonation({ 
+                            ...donation, 
+                            foreignDonation: { ...donation.foreignDonation, accountName: e.target.value }
+                          })}
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <input
+                            className="w-full px-4 py-2 border rounded-lg"
+                            placeholder="Account Number"
+                            value={donation.foreignDonation?.accountNumber || ''}
+                            onChange={(e) => setDonation({ 
+                              ...donation, 
+                              foreignDonation: { ...donation.foreignDonation, accountNumber: e.target.value }
+                            })}
+                          />
+                          <input
+                            className="w-full px-4 py-2 border rounded-lg"
+                            placeholder="SWIFT Code"
+                            value={donation.foreignDonation?.swiftCode || ''}
+                            onChange={(e) => setDonation({ 
+                              ...donation, 
+                              foreignDonation: { ...donation.foreignDonation, swiftCode: e.target.value }
+                            })}
+                          />
+                        </div>
+                        <input
+                          className="w-full px-4 py-2 border rounded-lg"
+                          placeholder="IFSC Code"
+                          value={donation.foreignDonation?.ifscCode || ''}
+                          onChange={(e) => setDonation({ 
+                            ...donation, 
+                            foreignDonation: { ...donation.foreignDonation, ifscCode: e.target.value }
+                          })}
+                        />
+                      </div>
                     </>
                   ) : (
                     <>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, HandHeart, Sparkles, GraduationCap, Calendar, MapPin, Clock, Mail, Phone, MapPinned, ChevronDown, ArrowRight } from 'lucide-react';
+import { Heart, HandHeart, Sparkles, GraduationCap, Calendar, MapPin, Clock, Mail, Phone, MapPinned, ChevronDown, ArrowRight, Play } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Separator } from '../components/ui/separator';
+import MediaModal from '../components/MediaModal';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -27,6 +28,11 @@ const Home = () => {
   const [donationInfo, setDonationInfo] = useState(null);
   const [heroData, setHeroData] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMedia, setModalMedia] = useState(null);
+  const [modalType, setModalType] = useState('image');
   
   // Contact form state
   const [contactForm, setContactForm] = useState({
@@ -98,6 +104,12 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <MediaModal 
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        media={modalMedia} 
+        type={modalType} 
+      />
       {/* Header */}
       <header className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -195,6 +207,38 @@ const Home = () => {
           </div>
         </section>
       )}
+
+      {/* Updates Section - Horizontal Scroll */}
+      <section className="py-12 px-4 bg-gradient-to-r from-amber-50 to-blue-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <Badge className="mb-2 bg-amber-500 text-white">Latest Updates</Badge>
+              <h2 className="text-3xl font-bold text-gray-900">Recent Activity & News</h2>
+            </div>
+          </div>
+          
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+            {[
+              { title: "New Initiative Launched", desc: "Animal welfare program expanded to 5 new locations", date: "2 days ago", color: "bg-blue-500" },
+              { title: "Community Event Success", desc: "500+ families benefited from recent food distribution drive", date: "5 days ago", color: "bg-green-500" },
+              { title: "Education Update", desc: "Tapovan Vidyalay achieves 100% exam results", date: "1 week ago", color: "bg-purple-500" },
+              { title: "Upcoming Paryushan", desc: "Annual Paryushan Aradhana celebrations from Aug 15-22", date: "Coming Soon", color: "bg-amber-500" }
+            ].map((update, index) => (
+              <Card key={index} className="min-w-[320px] hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className={`w-12 h-12 ${update.color} rounded-full flex items-center justify-center mb-4`}>
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{update.title}</h3>
+                  <p className="text-gray-600 text-sm mb-3">{update.desc}</p>
+                  <p className="text-xs text-gray-500 font-semibold">{update.date}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Activities Section */}
       <section id="activities" className="py-16 px-4 bg-gradient-to-br from-blue-50 to-slate-100">
@@ -389,12 +433,40 @@ const Home = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
             {filteredImages.slice(0, 6).map((image) => (
-              <div key={image._id} className="group relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3]">
-                <img 
-                  src={image.url} 
-                  alt={image.title}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
+              <div 
+                key={image._id} 
+                className="group relative overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 aspect-[4/3] cursor-pointer"
+                onClick={() => {
+                  setModalMedia(image.url);
+                  setModalType(image.type || 'image');
+                  setModalOpen(true);
+                }}
+              >
+                {image.type === 'video' ? (
+                  <div className="relative w-full h-full bg-black">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Play className="w-16 h-16 text-white/80" />
+                    </div>
+                    {image.url.includes('youtube') || image.url.includes('youtu.be') ? (
+                      <img
+                        src={`https://img.youtube.com/vi/${image.url.split('v=')[1]?.split('&')[0] || image.url.split('/').pop()}/maxresdefault.jpg`}
+                        alt={image.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <video
+                        src={image.url}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <img 
+                    src={image.url} 
+                    alt={image.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
                   <p className="text-white font-semibold text-base p-3">{image.title}</p>
                 </div>
