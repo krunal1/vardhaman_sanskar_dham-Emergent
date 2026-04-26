@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Users, MessageSquare, DollarSign, Sparkles, Calendar, Upload } from 'lucide-react';
+import { User, Users, MessageSquare, DollarSign, Sparkles, Calendar, Upload, Edit, Save, FileText, Download, Play, GraduationCap, Star, Heart, ArrowLeft, Separator } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { toast } from 'sonner';
@@ -1139,6 +1139,566 @@ export const EventsTab = ({ api }) => {
           </Card>
         ))}
       </div>
+    </div>
+  );
+};
+// ============ REUSABLE MEDIA MANAGER ============
+const MediaManager = ({ title, items, setItems, handleImageUpload, uploadingImage, showVideoField = true }) => (
+  <div className="space-y-4">
+    <div className="flex items-center justify-between flex-wrap gap-2">
+      <p className="text-sm font-bold text-[#1a3a6b]">{title}</p>
+      <div className="flex gap-2 flex-wrap">
+        <Button size="sm" variant="outline" className="text-blue-600 border-blue-300"
+          onClick={() => setItems([...items, { type: 'image', url: '', title: '' }])}>+ Image URL</Button>
+        {showVideoField && (
+          <Button size="sm" variant="outline" className="text-red-600 border-red-300"
+            onClick={() => setItems([...items, { type: 'video', url: '', title: '' }])}>+ YouTube URL</Button>
+        )}
+        <Button size="sm" variant="outline" className="text-green-600 border-green-300" disabled={uploadingImage}
+          onClick={async () => {
+            const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+            inp.onchange = async (e) => {
+              const url = await handleImageUpload(e.target.files[0]);
+              if (url) setItems([...items, { type: 'image', url, title: '' }]);
+            }; inp.click();
+          }}>{uploadingImage ? '...' : '📁 Image'}</Button>
+        {showVideoField && (
+          <Button size="sm" variant="outline" className="text-purple-600 border-purple-300" disabled={uploadingImage}
+            onClick={async () => {
+              const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'video/*';
+              inp.onchange = async (e) => {
+                const url = await handleImageUpload(e.target.files[0]);
+                if (url) setItems([...items, { type: 'video', url, title: '' }]);
+              }; inp.click();
+            }}>{uploadingImage ? '...' : '🎥 Video'}</Button>
+        )}
+      </div>
+    </div>
+    <div className="grid sm:grid-cols-2 gap-3">
+      {items.map((item, i) => (
+        <div key={i} className="border rounded-lg p-3 bg-gray-50 space-y-2">
+          <div className="flex justify-between items-center">
+            <span className={`text-xs px-2 py-0.5 rounded font-bold ${item.type === 'video' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+              {item.type === 'video' ? '▶ Video' : '🖼 Image'}
+            </span>
+            <Button size="sm" variant="destructive" className="h-6 w-6 p-0"
+              onClick={() => { const n = [...items]; n.splice(i, 1); setItems(n); }}>✕</Button>
+          </div>
+          <input className="w-full px-2 py-1.5 border rounded text-sm" placeholder="Title"
+            value={item.title || ''} onChange={(e) => { const n = [...items]; n[i].title = e.target.value; setItems(n); }} />
+          <input className="w-full px-2 py-1.5 border rounded text-sm" placeholder={item.type === 'video' ? 'YouTube URL' : 'Image URL'}
+            value={item.url || ''} onChange={(e) => { const n = [...items]; n[i].url = e.target.value; setItems(n); }} />
+          {item.type === 'image' && item.url && (
+            <img src={item.url} alt="" className="w-full h-24 object-cover rounded" onError={(e) => e.target.style.display='none'} />
+          )}
+        </div>
+      ))}
+    </div>
+    {items.length === 0 && (
+      <div className="text-center py-8 border-2 border-dashed rounded-lg text-gray-400 text-sm">
+        No items yet. Click the buttons above to add images or videos.
+      </div>
+    )}
+  </div>
+);
+
+const PdfManager = ({ pdfs, setPdfs }) => (
+  <div className="space-y-3">
+    <p className="text-sm font-bold text-[#1a3a6b]">📄 PDF Attachments</p>
+    {pdfs.map((pdf, i) => (
+      <div key={i} className="flex gap-2 items-center">
+        <input className="flex-1 px-3 py-2 border rounded-lg text-sm" placeholder="PDF Title"
+          value={pdf.title || ''} onChange={(e) => { const p = [...pdfs]; p[i].title = e.target.value; setPdfs(p); }} />
+        <input className="flex-1 px-3 py-2 border rounded-lg text-sm" placeholder="PDF URL (Google Drive link etc.)"
+          value={pdf.url || ''} onChange={(e) => { const p = [...pdfs]; p[i].url = e.target.value; setPdfs(p); }} />
+        <Button size="sm" variant="destructive"
+          onClick={() => { const p = [...pdfs]; p.splice(i, 1); setPdfs(p); }}>✕</Button>
+      </div>
+    ))}
+    <Button size="sm" variant="outline" className="text-red-600 border-red-300"
+      onClick={() => setPdfs([...pdfs, { title: '', url: '' }])}>+ Add PDF</Button>
+  </div>
+);
+
+// ============ TAPOVAN TAB ============
+export const TapovanTab = ({ api, handleImageUpload, uploadingImage }) => {
+  const [pageData, setPageData] = useState({ title: 'Tapovan Vidyalay', subtitle: '', description: '', image: '', images: [], videos: [], pdfs: [] });
+  const [schools, setSchools] = useState([]);
+  const [editingPage, setEditingPage] = useState(false);
+  const [editingSchool, setEditingSchool] = useState(null); // null | 'new' | index
+  const [schoolForm, setSchoolForm] = useState({ name: '', location: '', image: '', description: '', websiteLink: '', order: 0 });
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('schools'); // 'schools' | 'page'
+
+  useEffect(() => { fetchAll(); }, []);
+
+  const fetchAll = async () => {
+    try {
+      const [pageRes, schoolsRes] = await Promise.all([
+        api.get('/api/pages/tapovan').catch(() => ({ data: {} })),
+        api.get('/api/tapovan-schools').catch(() => ({ data: [] }))
+      ]);
+      if (pageRes.data) setPageData(prev => ({ ...prev, ...pageRes.data }));
+      setSchools(schoolsRes.data || []);
+    } catch (e) { console.error(e); }
+  };
+
+  const savePage = async () => {
+    setSaving(true);
+    try {
+      await api.put('/api/pages/tapovan', pageData);
+      toast.success('Page content saved!');
+      setEditingPage(false);
+    } catch (e) { toast.error('Failed to save'); }
+    finally { setSaving(false); }
+  };
+
+  const saveSchool = async () => {
+    setSaving(true);
+    try {
+      if (editingSchool === 'new') {
+        await api.post('/api/tapovan-schools', schoolForm);
+        toast.success('School added!');
+      } else {
+        const school = schools[editingSchool];
+        await api.put(`/api/tapovan-schools/${school._id}`, schoolForm);
+        toast.success('School updated!');
+      }
+      setEditingSchool(null);
+      fetchAll();
+    } catch (e) { toast.error('Failed to save school'); }
+    finally { setSaving(false); }
+  };
+
+  const deleteSchool = async (id) => {
+    if (!window.confirm('Delete this school?')) return;
+    try {
+      await api.delete(`/api/tapovan-schools/${id}`);
+      toast.success('School deleted');
+      fetchAll();
+    } catch (e) { toast.error('Failed to delete'); }
+  };
+
+  const openEditSchool = (index) => {
+    const s = schools[index];
+    setSchoolForm({ name: s.name||'', location: s.location||'', image: s.image||'', description: s.description||'', websiteLink: s.websiteLink||'', order: s.order||0 });
+    setEditingSchool(index);
+  };
+
+  const openNewSchool = () => {
+    setSchoolForm({ name: '', location: '', image: '', description: '', websiteLink: '', order: schools.length });
+    setEditingSchool('new');
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-[#1a3a6b]">Tapovan Vidyalay</h2>
+
+      {/* Tab switcher */}
+      <div className="flex gap-2 border-b pb-2">
+        <button onClick={() => setActiveTab('schools')}
+          className={`px-4 py-2 rounded-t text-sm font-semibold ${activeTab === 'schools' ? 'bg-[#1a3a6b] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+          🏫 Schools ({schools.length})
+        </button>
+        <button onClick={() => setActiveTab('page')}
+          className={`px-4 py-2 rounded-t text-sm font-semibold ${activeTab === 'page' ? 'bg-[#1a3a6b] text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+          📄 Page Content
+        </button>
+      </div>
+
+      {/* SCHOOLS TAB */}
+      {activeTab === 'schools' && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-gray-500">Manage individual Tapovan Vidyalay branches shown on the public page.</p>
+            <Button onClick={openNewSchool} className="bg-[#d97706] hover:bg-[#b45309]">+ Add School</Button>
+          </div>
+
+          {/* School Form */}
+          {editingSchool !== null && (
+            <Card className="border-2 border-[#d97706]/40">
+              <CardHeader><CardTitle className="text-lg">{editingSchool === 'new' ? 'Add New School' : 'Edit School'}</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">School Name *</label>
+                    <input className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="e.g. Bhiwandi Tapovan"
+                      value={schoolForm.name} onChange={e => setSchoolForm({...schoolForm, name: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Location</label>
+                    <input className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="e.g. Bhiwandi, Maharashtra"
+                      value={schoolForm.location} onChange={e => setSchoolForm({...schoolForm, location: e.target.value})} />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Main Image</label>
+                  <div className="flex gap-2">
+                    <input className="flex-1 px-3 py-2 border rounded-lg text-sm" placeholder="Image URL"
+                      value={schoolForm.image} onChange={e => setSchoolForm({...schoolForm, image: e.target.value})} />
+                    <Button size="sm" className="bg-blue-500" disabled={uploadingImage}
+                      onClick={async () => {
+                        const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+                        inp.onchange = async (e) => {
+                          const url = await handleImageUpload(e.target.files[0]);
+                          if (url) setSchoolForm(f => ({...f, image: url}));
+                        }; inp.click();
+                      }}>{uploadingImage ? '...' : '📁'}</Button>
+                  </div>
+                  {schoolForm.image && <img src={schoolForm.image} alt="" className="mt-2 h-28 object-cover rounded" />}
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+                  <textarea rows="4" className="w-full px-3 py-2 border rounded-lg text-sm"
+                    placeholder="About this school branch..."
+                    value={schoolForm.description} onChange={e => setSchoolForm({...schoolForm, description: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Website Link</label>
+                    <input className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="https://..."
+                      value={schoolForm.websiteLink} onChange={e => setSchoolForm({...schoolForm, websiteLink: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Display Order</label>
+                    <input type="number" className="w-full px-3 py-2 border rounded-lg text-sm"
+                      value={schoolForm.order} onChange={e => setSchoolForm({...schoolForm, order: parseInt(e.target.value)||0})} />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2 border-t">
+                  <Button onClick={saveSchool} disabled={saving} className="bg-green-600">
+                    <Save className="w-4 h-4 mr-2" />{saving ? 'Saving...' : 'Save School'}
+                  </Button>
+                  <Button onClick={() => setEditingSchool(null)} variant="outline">Cancel</Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Schools Grid */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {schools.map((school, i) => (
+              <Card key={school._id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative h-36 bg-gray-100">
+                  {school.image
+                    ? <img src={school.image} alt={school.name} className="w-full h-full object-cover" onError={e => e.target.style.display='none'} />
+                    : <div className="w-full h-full flex items-center justify-center text-gray-400 text-4xl">🏫</div>
+                  }
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-gray-900">{school.name}</h3>
+                  {school.location && <p className="text-xs text-gray-500 mb-2">📍 {school.location}</p>}
+                  <p className="text-xs text-gray-600 line-clamp-2 mb-3">{school.description}</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => openEditSchool(i)}>
+                      <Edit className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                    <Button size="sm" variant="destructive" className="text-xs" onClick={() => deleteSchool(school._id)}>Delete</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {schools.length === 0 && (
+            <div className="text-center py-16 border-2 border-dashed rounded-lg text-gray-400">
+              No schools added yet. Click "+ Add School" to get started.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* PAGE CONTENT TAB */}
+      {activeTab === 'page' && (
+        <div className="space-y-4">
+          <div className="flex justify-between">
+            <p className="text-sm text-gray-500">Edit the main Tapovan page heading, intro text, and media.</p>
+            {!editingPage
+              ? <Button onClick={() => setEditingPage(true)} className="bg-[#1a3a6b]"><Edit className="w-4 h-4 mr-2" />Edit</Button>
+              : <div className="flex gap-2">
+                  <Button onClick={savePage} disabled={saving} className="bg-green-600"><Save className="w-4 h-4 mr-2" />{saving ? 'Saving...' : 'Save'}</Button>
+                  <Button onClick={() => { setEditingPage(false); fetchAll(); }} variant="outline">Cancel</Button>
+                </div>
+            }
+          </div>
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              {editingPage ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Page Title</label>
+                      <input className="w-full px-3 py-2 border rounded-lg text-sm" value={pageData.title}
+                        onChange={e => setPageData({...pageData, title: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Subtitle</label>
+                      <input className="w-full px-3 py-2 border rounded-lg text-sm" value={pageData.subtitle||''}
+                        onChange={e => setPageData({...pageData, subtitle: e.target.value})} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Introduction Text</label>
+                    <textarea rows="4" className="w-full px-3 py-2 border rounded-lg text-sm" value={pageData.description||''}
+                      onChange={e => setPageData({...pageData, description: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Main Image</label>
+                    <div className="flex gap-2">
+                      <input className="flex-1 px-3 py-2 border rounded-lg text-sm" value={pageData.image||''}
+                        onChange={e => setPageData({...pageData, image: e.target.value})} />
+                      <Button size="sm" className="bg-blue-500" disabled={uploadingImage}
+                        onClick={async () => { const inp=document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=async(e)=>{ const url=await handleImageUpload(e.target.files[0]); if(url) setPageData(d=>({...d,image:url})); }; inp.click(); }}>
+                        {uploadingImage ? '...' : '📁'}
+                      </Button>
+                    </div>
+                    {pageData.image && <img src={pageData.image} alt="" className="mt-2 h-24 object-cover rounded" />}
+                  </div>
+                  <div className="border-t pt-4">
+                    <MediaManager title="Extra Gallery" items={pageData.images||[]} setItems={imgs=>setPageData({...pageData,images:imgs})} handleImageUpload={handleImageUpload} uploadingImage={uploadingImage} />
+                  </div>
+                  <div className="border-t pt-4">
+                    <PdfManager pdfs={pageData.pdfs||[]} setPdfs={pdfs=>setPageData({...pageData,pdfs})} />
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold">{pageData.title}</h3>
+                  <p className="text-gray-600 text-sm">{pageData.subtitle}</p>
+                  <p className="text-gray-700 text-sm">{pageData.description || 'No intro text yet.'}</p>
+                  {pageData.image && <img src={pageData.image} alt="" className="h-24 object-cover rounded" />}
+                  <div className="flex gap-4 text-sm text-gray-500 pt-2">
+                    <span>📷 {(pageData.images||[]).length} gallery items</span>
+                    <span>📄 {(pageData.pdfs||[]).length} PDFs</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============ GURUDEV TAB ============
+export const GurudevTab = ({ api, handleImageUpload, uploadingImage }) => {
+  const [data, setData] = useState({ title: 'About Gurudev', subtitle: 'P.P.P. Chandrashekharvijaiyji M.S.', description: '', image: '', images: [], videos: [], pdfs: [] });
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { fetchData(); }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await api.get('/api/pages/gurudev');
+      if (res.data) setData(prev => ({ ...prev, ...res.data }));
+    } catch (e) { console.log('No gurudev data yet'); }
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.put('/api/pages/gurudev', data);
+      toast.success('Gurudev page saved!');
+      setEditing(false);
+    } catch (e) { toast.error('Failed to save'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-[#1a3a6b]">Gurudev Page</h2>
+        {!editing ? (
+          <Button onClick={() => setEditing(true)} className="bg-[#1a3a6b]"><Edit className="w-4 h-4 mr-2" />Edit</Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button onClick={save} disabled={saving} className="bg-green-600"><Save className="w-4 h-4 mr-2" />{saving ? 'Saving...' : 'Save'}</Button>
+            <Button onClick={() => { setEditing(false); fetchData(); }} variant="outline">Cancel</Button>
+          </div>
+        )}
+      </div>
+
+      <Card>
+        <CardContent className="p-6 space-y-5">
+          {editing ? (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Page Title</label>
+                  <input className="w-full px-3 py-2 border rounded-lg text-sm" value={data.title} onChange={e => setData({...data, title: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Subtitle / Name</label>
+                  <input className="w-full px-3 py-2 border rounded-lg text-sm" value={data.subtitle || ''} onChange={e => setData({...data, subtitle: e.target.value})} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Biography / Description</label>
+                <textarea rows="6" className="w-full px-3 py-2 border rounded-lg text-sm" value={data.description || ''} onChange={e => setData({...data, description: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Main Photo</label>
+                <div className="flex gap-2">
+                  <input className="flex-1 px-3 py-2 border rounded-lg text-sm" placeholder="https://..." value={data.image || ''} onChange={e => setData({...data, image: e.target.value})} />
+                  <Button size="sm" className="bg-blue-500" disabled={uploadingImage}
+                    onClick={async () => { const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.onchange=async(e)=>{ const url=await handleImageUpload(e.target.files[0]); if(url) setData({...data,image:url}); }; inp.click(); }}>
+                    {uploadingImage ? '...' : '📁'}
+                  </Button>
+                </div>
+                {data.image && <img src={data.image} alt="" className="mt-2 h-32 object-cover rounded" />}
+              </div>
+              <div className="border-t pt-4">
+                <MediaManager title="📷 Photo Gallery" items={data.images||[]} setItems={imgs => setData({...data, images: imgs})} handleImageUpload={handleImageUpload} uploadingImage={uploadingImage} />
+              </div>
+              <div className="border-t pt-4">
+                <label className="block text-xs font-semibold text-gray-600 mb-2">Pravachan / Discourse Videos (YouTube)</label>
+                {(data.videos||[]).map((v, i) => (
+                  <div key={i} className="flex gap-2 mb-2">
+                    <input className="flex-1 px-3 py-2 border rounded-lg text-sm" placeholder="YouTube URL" value={v}
+                      onChange={e => { const vs=[...(data.videos||[])]; vs[i]=e.target.value; setData({...data,videos:vs}); }} />
+                    <Button size="sm" variant="destructive" onClick={() => { const vs=[...(data.videos||[])]; vs.splice(i,1); setData({...data,videos:vs}); }}>✕</Button>
+                  </div>
+                ))}
+                <Button size="sm" variant="outline" className="text-purple-600 border-purple-300"
+                  onClick={() => setData({...data, videos: [...(data.videos||[]), '']})}>+ Add Video</Button>
+              </div>
+              <div className="border-t pt-4">
+                <PdfManager pdfs={data.pdfs||[]} setPdfs={pdfs => setData({...data, pdfs})} />
+              </div>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <h3 className="text-xl font-bold">{data.title}</h3>
+              <p className="text-amber-600 font-medium text-sm">{data.subtitle}</p>
+              <p className="text-gray-700 text-sm">{data.description || 'No content yet. Click Edit to add.'}</p>
+              {data.image && <img src={data.image} alt="" className="h-32 object-cover rounded" />}
+              <div className="flex gap-4 text-sm text-gray-500">
+                <span>📷 {(data.images||[]).length} photos</span>
+                <span>🎥 {(data.videos||[]).length} videos</span>
+                <span>📄 {(data.pdfs||[]).length} PDFs</span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// ============ MEDIA PAGE TAB ============
+export const MediaPageTab = ({ api, handleImageUpload, uploadingImage }) => {
+  const [items, setItems] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { fetchItems(); }, []);
+
+  const fetchItems = async () => {
+    try {
+      const { data } = await api.get('/api/gallery');
+      setItems(data || []);
+    } catch (e) { console.error(e); }
+  };
+
+  const addItem = (type) => {
+    setItems([...items, { type, url: '', title: '', category: 'general' }]);
+  };
+
+  const deleteItem = async (id, index) => {
+    if (!window.confirm('Delete this item?')) return;
+    try {
+      if (id) await api.delete(`/api/gallery/${id}`);
+      const n = [...items]; n.splice(index, 1); setItems(n);
+      toast.success('Deleted');
+    } catch (e) { toast.error('Failed to delete'); }
+  };
+
+  const saveItem = async (item, index) => {
+    setSaving(true);
+    try {
+      if (item._id) {
+        await api.put(`/api/gallery/${item._id}`, item);
+      } else {
+        const { data } = await api.post('/api/gallery', item);
+        const n = [...items]; n[index] = data; setItems(n);
+      }
+      toast.success('Saved!');
+      fetchItems();
+    } catch (e) { toast.error('Failed to save'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center flex-wrap gap-2">
+        <h2 className="text-2xl font-bold text-[#1a3a6b]">Media & Gallery Page</h2>
+        <div className="flex gap-2 flex-wrap">
+          <Button size="sm" className="bg-blue-500" onClick={() => addItem('image')}>+ Image URL</Button>
+          <Button size="sm" className="bg-red-500" onClick={() => addItem('video')}>+ YouTube URL</Button>
+          <Button size="sm" className="bg-green-600" disabled={uploadingImage}
+            onClick={async () => {
+              const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+              inp.onchange = async (e) => {
+                const url = await handleImageUpload(e.target.files[0]);
+                if (url) setItems([...items, { type: 'image', url, title: '', category: 'general' }]);
+              }; inp.click();
+            }}>{uploadingImage ? 'Uploading...' : '📁 Upload Image'}</Button>
+          <Button size="sm" className="bg-purple-600" disabled={uploadingImage}
+            onClick={async () => {
+              const inp = document.createElement('input'); inp.type='file'; inp.accept='video/*';
+              inp.onchange = async (e) => {
+                const url = await handleImageUpload(e.target.files[0]);
+                if (url) setItems([...items, { type: 'video', url, title: '', category: 'general' }]);
+              }; inp.click();
+            }}>{uploadingImage ? 'Uploading...' : '🎥 Upload Video'}</Button>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {items.map((item, i) => (
+          <Card key={item._id || i} className="overflow-hidden">
+            <div className="relative h-36 bg-gray-100">
+              {item.type === 'video' ? (
+                <div className="w-full h-full flex items-center justify-center bg-gray-800 text-white text-sm">▶ Video</div>
+              ) : item.url ? (
+                <img src={item.url} alt={item.title} className="w-full h-full object-cover" onError={(e) => e.target.style.display='none'} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">No image</div>
+              )}
+              <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded font-bold text-white ${item.type === 'video' ? 'bg-red-500' : 'bg-blue-500'}`}>
+                {item.type === 'video' ? 'Video' : 'Photo'}
+              </span>
+            </div>
+            <CardContent className="p-3 space-y-2">
+              <input className="w-full px-2 py-1.5 border rounded text-sm" placeholder="Title"
+                value={item.title || ''} onChange={e => { const n=[...items]; n[i].title=e.target.value; setItems(n); }} />
+              <input className="w-full px-2 py-1.5 border rounded text-sm" placeholder={item.type==='video'?'YouTube URL':'Image URL'}
+                value={item.url || ''} onChange={e => { const n=[...items]; n[i].url=e.target.value; setItems(n); }} />
+              <select className="w-full px-2 py-1.5 border rounded text-sm"
+                value={item.category || 'general'} onChange={e => { const n=[...items]; n[i].category=e.target.value; setItems(n); }}>
+                <option value="general">General</option>
+                <option value="bhakti">Bhakti</option>
+                <option value="service">Service</option>
+                <option value="education">Education</option>
+                <option value="events">Events</option>
+              </select>
+              <div className="flex gap-2">
+                <Button size="sm" className="flex-1 bg-green-600 text-xs" disabled={saving} onClick={() => saveItem(item, i)}>
+                  {item._id ? 'Update' : 'Save'}
+                </Button>
+                <Button size="sm" variant="destructive" className="text-xs" onClick={() => deleteItem(item._id, i)}>Delete</Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {items.length === 0 && (
+        <div className="text-center py-16 border-2 border-dashed rounded-lg text-gray-400">
+          No media items yet. Add images or YouTube videos above.
+        </div>
+      )}
     </div>
   );
 };

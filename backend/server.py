@@ -778,7 +778,43 @@ async def update_hero(hero: HeroSectionModel, user: dict = Depends(get_current_u
     )
     return hero.dict()
 
-# ============ Image Upload Route ============
+class TapovanSchoolModel(BaseModel):
+    name: str
+    location: str = ""
+    image: str = ""
+    description: str = ""
+    websiteLink: str = ""
+    order: int = 0
+
+@api_router.get("/tapovan-schools")
+async def get_tapovan_schools():
+    schools = await db.tapovan_schools.find().sort("order", 1).to_list(50)
+    for s in schools:
+        s["_id"] = str(s["_id"])
+    return schools
+
+@api_router.post("/tapovan-schools")
+async def create_tapovan_school(school: TapovanSchoolModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    result = await db.tapovan_schools.insert_one(school.dict())
+    return {"_id": str(result.inserted_id), **school.dict()}
+
+@api_router.put("/tapovan-schools/{school_id}")
+async def update_tapovan_school(school_id: str, school: TapovanSchoolModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    await db.tapovan_schools.update_one({"_id": ObjectId(school_id)}, {"$set": school.dict()})
+    return {"message": "Updated"}
+
+@api_router.delete("/tapovan-schools/{school_id}")
+async def delete_tapovan_school(school_id: str, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    await db.tapovan_schools.delete_one({"_id": ObjectId(school_id)})
+    return {"message": "Deleted"}
+
+# ============ Image/Video Upload Route ============
 
 @api_router.post("/upload")
 async def upload_image(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
@@ -786,9 +822,10 @@ async def upload_image(file: UploadFile = File(...), user: dict = Depends(get_cu
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Validate file type
-    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif",
+                     "video/mp4", "video/webm", "video/ogg", "video/quicktime", "video/x-msvideo"]
     if file.content_type not in allowed_types:
-        raise HTTPException(status_code=400, detail="Only JPEG, PNG, and WebP images are allowed")
+        raise HTTPException(status_code=400, detail="Only image and video files are allowed")
     
     # Generate unique filename
     file_extension = file.filename.split(".")[-1]
@@ -809,6 +846,47 @@ async def upload_image(file: UploadFile = File(...), user: dict = Depends(get_cu
         raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
     finally:
         file.file.close()
+
+# ============ Gallery PUT (update existing item) ============
+
+@api_router.put("/gallery/{image_id}")
+async def update_gallery_image(image_id: str, image: GalleryImageModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    await db.gallery.update_one({"_id": ObjectId(image_id)}, {"$set": image.dict()})
+    return {"message": "Updated successfully"}
+
+# ============ Pages Routes (Tapovan, Gurudev) ============
+
+class PageModel(BaseModel):
+    title: Optional[str] = ""
+    subtitle: Optional[str] = ""
+    description: Optional[str] = ""
+    image: Optional[str] = ""
+    images: Optional[List[dict]] = []
+    videos: Optional[List[str]] = []
+    pdfs: Optional[List[dict]] = []
+
+@api_router.get("/pages/{page_slug}")
+async def get_page(page_slug: str):
+    page = await db.pages.find_one({"slug": page_slug})
+    if not page:
+        return {}
+    page["_id"] = str(page["_id"])
+    return page
+
+@api_router.put("/pages/{page_slug}")
+async def update_page(page_slug: str, page: PageModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    data = page.dict()
+    data["slug"] = page_slug
+    existing = await db.pages.find_one({"slug": page_slug})
+    if existing:
+        await db.pages.update_one({"slug": page_slug}, {"$set": data})
+    else:
+        await db.pages.insert_one(data)
+    return {"message": "Page saved successfully"}
 
 # Include router in app
 app.include_router(api_router)

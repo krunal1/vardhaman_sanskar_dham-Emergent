@@ -10,10 +10,10 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Separator } from '../components/ui/separator';
 import {
   LogOut, Activity, Info, Calendar, Image, Phone, CreditCard,
-  Plus, Edit, Trash2, Save, User, Users, MessageSquare, DollarSign, Sparkles
+  Plus, Edit, Trash2, Save, User, Users, MessageSquare, DollarSign, Sparkles, GraduationCap
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ProfileTab, UsersTab, MessagesTab, DonationsTab, HeroTab, UpdatesTab } from '../components/AdminTabs';
+import { ProfileTab, UsersTab, MessagesTab, DonationsTab, HeroTab, UpdatesTab, TapovanTab, GurudevTab, MediaPageTab } from '../components/AdminTabs';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -74,23 +74,36 @@ const AdminDashboard = () => {
   // Image upload handler
   const handleImageUpload = async (file) => {
     if (!file) return null;
-    
     setUploadingImage(true);
     const formData = new FormData();
     formData.append('file', file);
-    
     try {
       const { data } = await api.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      toast.success('Image uploaded successfully');
+      const isVideo = file.type.startsWith('video/');
+      toast.success(isVideo ? 'Video uploaded successfully' : 'Image uploaded successfully');
       setUploadingImage(false);
       return data.url;
     } catch (error) {
-      toast.error('Failed to upload image');
+      toast.error('Failed to upload file');
       setUploadingImage(false);
       return null;
     }
+  };
+
+  // Generic file picker helper used by child tabs
+  const pickAndUpload = async (accept, onSuccess) => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = accept;
+    inp.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = await handleImageUpload(file);
+      if (url) onSuccess(url, file.type.startsWith('video/') ? 'video' : 'image');
+    };
+    inp.click();
   };
 
   const handleLogout = async () => {
@@ -340,6 +353,18 @@ const AdminDashboard = () => {
             <TabsTrigger value="donations" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
               <DollarSign className="w-4 h-4 mr-1" />
               Donation Records
+            </TabsTrigger>
+            <TabsTrigger value="tapovan" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
+              <GraduationCap className="w-4 h-4 mr-1" />
+              Tapovan
+            </TabsTrigger>
+            <TabsTrigger value="gurudev" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
+              <Sparkles className="w-4 h-4 mr-1" />
+              Gurudev
+            </TabsTrigger>
+            <TabsTrigger value="media" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
+              <Image className="w-4 h-4 mr-1" />
+              Media Page
             </TabsTrigger>
           </TabsList>
 
@@ -1104,6 +1129,48 @@ const AdminDashboard = () => {
                           })}
                         />
                       </div>
+
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Additional Bank Accounts</h3>
+                      <div className="space-y-4">
+                        {(donation.additionalBanks || []).map((bank, bi) => (
+                          <div key={bi} className="bg-gray-50 p-4 rounded-lg border space-y-2 relative">
+                            <button className="absolute top-2 right-2 text-red-500 hover:text-red-700 text-lg font-bold"
+                              onClick={() => { const b = [...(donation.additionalBanks||[])]; b.splice(bi,1); setDonation({...donation, additionalBanks: b}); }}>✕</button>
+                            <p className="text-xs font-bold text-gray-500 uppercase">Bank {bi + 2}</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {[['bankName','Bank Name'],['accountName','Account Name'],['accountNumber','Account Number'],['ifscCode','IFSC Code'],['branch','Branch'],['upiId','UPI ID']].map(([field, label]) => (
+                                <input key={field} className="w-full px-3 py-2 border rounded-lg text-sm" placeholder={label}
+                                  value={bank[field] || ''}
+                                  onChange={(e) => { const b = [...(donation.additionalBanks||[])]; b[bi] = {...b[bi], [field]: e.target.value}; setDonation({...donation, additionalBanks: b}); }} />
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        <Button size="sm" variant="outline" className="text-blue-600 border-blue-300"
+                          onClick={() => setDonation({...donation, additionalBanks: [...(donation.additionalBanks||[]), {bankName:'',accountName:'',accountNumber:'',ifscCode:'',branch:'',upiId:''}]})}>
+                          + Add Another Bank Account
+                        </Button>
+                      </div>
+
+                      <Separator className="my-4" />
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3">PDF Attachments (80G, Declaration, etc.)</h3>
+                      <div className="space-y-3">
+                        {(donation.pdfs || []).map((pdf, pi) => (
+                          <div key={pi} className="flex gap-2 items-center">
+                            <input className="flex-1 px-3 py-2 border rounded-lg text-sm" placeholder="PDF Title (e.g. 80G Certificate)"
+                              value={pdf.title || ''} onChange={(e) => { const p = [...(donation.pdfs||[])]; p[pi]={...p[pi], title: e.target.value}; setDonation({...donation, pdfs: p}); }} />
+                            <input className="flex-1 px-3 py-2 border rounded-lg text-sm" placeholder="PDF URL"
+                              value={pdf.url || ''} onChange={(e) => { const p = [...(donation.pdfs||[])]; p[pi]={...p[pi], url: e.target.value}; setDonation({...donation, pdfs: p}); }} />
+                            <Button size="sm" variant="destructive"
+                              onClick={() => { const p = [...(donation.pdfs||[])]; p.splice(pi,1); setDonation({...donation, pdfs: p}); }}>✕</Button>
+                          </div>
+                        ))}
+                        <Button size="sm" variant="outline" className="text-red-600 border-red-300"
+                          onClick={() => setDonation({...donation, pdfs: [...(donation.pdfs||[]), {title:'', url:''}]})}>
+                          + Add PDF Document
+                        </Button>
+                      </div>
                     </>
                   ) : (
                     <>
@@ -1182,6 +1249,20 @@ const AdminDashboard = () => {
           {/* Donations Tab */}
           <TabsContent value="donations">
             <DonationsTab api={api} />
+          </TabsContent>
+          {/* Tapovan Tab */}
+          <TabsContent value="tapovan">
+            <TapovanTab api={api} handleImageUpload={handleImageUpload} uploadingImage={uploadingImage} />
+          </TabsContent>
+
+          {/* Gurudev Tab */}
+          <TabsContent value="gurudev">
+            <GurudevTab api={api} handleImageUpload={handleImageUpload} uploadingImage={uploadingImage} />
+          </TabsContent>
+
+          {/* Media Page Tab */}
+          <TabsContent value="media">
+            <MediaPageTab api={api} handleImageUpload={handleImageUpload} uploadingImage={uploadingImage} />
           </TabsContent>
         </Tabs>
       </main>

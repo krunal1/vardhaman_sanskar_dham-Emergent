@@ -556,7 +556,13 @@ const Home = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <video src={image.url} className="w-full h-full object-cover" />
+                        <video
+                        src={image.url}
+                        className="w-full h-full object-cover opacity-70"
+                        preload="metadata"
+                        muted
+                        playsInline
+                      />
                       )}
                     </div>
                   ) : (
