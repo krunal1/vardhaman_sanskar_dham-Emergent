@@ -35,9 +35,10 @@ JWT_ALGORITHM = "HS256"
 # Create the main app
 app = FastAPI()
 
-# Create uploads directory
-UPLOAD_DIR = ROOT_DIR / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
+# Create uploads directory - use /tmp for cloud deployments (Render, etc.)
+import tempfile
+UPLOAD_DIR = Path("/tmp/uploads")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # CORS Configuration - MUST be before other middleware
 app.add_middleware(
@@ -820,32 +821,49 @@ async def delete_tapovan_school(school_id: str, user: dict = Depends(get_current
 async def upload_image(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Not authorized")
-    
-    # Validate file type
+
     allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif",
                      "video/mp4", "video/webm", "video/ogg", "video/quicktime", "video/x-msvideo"]
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Only image and video files are allowed")
-    
-    # Generate unique filename
-    file_extension = file.filename.split(".")[-1]
-    unique_filename = f"{uuid.uuid4()}.{file_extension}"
-    file_path = UPLOAD_DIR / unique_filename
-    
-    # Save file
-    try:
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        
-        # Return the URL
-        backend_url = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001")
-        image_url = f"{backend_url}/api/uploads/{unique_filename}"
-        
-        return {"url": image_url, "filename": unique_filename}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to upload image: {str(e)}")
-    finally:
-        file.file.close()
+
+    cloudinary_url = os.environ.get("CLOUDINARY_URL")
+
+    if cloudinary_url:
+        # Upload to Cloudinary
+        try:
+            import cloudinary
+            import cloudinary.uploader
+
+            cloudinary.config(cloudinary_url=cloudinary_url)
+
+            is_video = file.content_type.startswith("video/")
+            file_bytes = await file.read()
+
+            result = cloudinary.uploader.upload(
+                file_bytes,
+                resource_type="video" if is_video else "image",
+                folder="vsdham",
+            )
+            return {"url": result["secure_url"], "filename": result["public_id"]}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Cloudinary upload failed: {str(e)}")
+        finally:
+            file.file.close()
+    else:
+        # Fallback: local /tmp storage
+        try:
+            file_extension = file.filename.split(".")[-1]
+            unique_filename = f"{uuid.uuid4()}.{file_extension}"
+            file_path = UPLOAD_DIR / unique_filename
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            backend_url = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001")
+            return {"url": f"{backend_url}/api/uploads/{unique_filename}", "filename": unique_filename}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+        finally:
+            file.file.close()
 
 # ============ Gallery PUT (update existing item) ============
 
