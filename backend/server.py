@@ -244,18 +244,7 @@ async def seed_admin():
             {"$set": {"password_hash": hash_password(admin_password)}}
         )
         logger.info(f"Admin password updated: {admin_email}")
-    
-    # Write credentials to test file
-    os.makedirs("/app/memory", exist_ok=True)
-    with open("/app/memory/test_credentials.md", "w") as f:
-        f.write("# Admin Credentials\n\n")
-        f.write(f"**Email:** {admin_email}\n")
-        f.write(f"**Password:** {admin_password}\n")
-        f.write("**Role:** admin\n\n")
-        f.write("## Endpoints\n")
-        f.write("- POST /api/auth/login\n")
-        f.write("- GET /api/auth/me\n")
-        f.write("- POST /api/auth/logout\n")
+
 
 @app.on_event("startup")
 async def startup_event():
