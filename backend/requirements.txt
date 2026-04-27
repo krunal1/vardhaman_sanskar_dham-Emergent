@@ -12,4 +12,7 @@ pydantic[email]>=2.0.0
 aiofiles>=23.0.0
 email-validator>=2.0.0
 cryptography>=41.0.0
+<<<<<<< HEAD
 cloudinary>=1.36.0
+=======
+>>>>>>> d06840d6921d6aa9af47959a1ece06fb607a0629
