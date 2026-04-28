@@ -274,8 +274,8 @@ async def login(credentials: LoginRequest, response: Response):
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=900,
         path="/"
     )
@@ -283,8 +283,8 @@ async def login(credentials: LoginRequest, response: Response):
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=True,
+        samesite="none",
         max_age=604800,
         path="/"
     )
@@ -293,6 +293,7 @@ async def login(credentials: LoginRequest, response: Response):
         "email": user["email"],
         "name": user.get("name", ""),
         "role": user.get("role", "user"),
+        "access_token": access_token,
         "_id": user_id
     }
 
