@@ -20,7 +20,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('activities');
+  const [activeTab, setActiveTab] = useState('hero');
   
   // State for all content
   const [activities, setActivities] = useState([]);
@@ -305,7 +305,8 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full overflow-x-auto flex flex-nowrap bg-white p-2 rounded-lg shadow text-xs">
+          <div className="w-full overflow-x-auto pb-1" style={{scrollbarWidth: 'thin'}}>
+          <TabsList className="flex flex-nowrap bg-white p-2 rounded-lg shadow text-xs min-w-max gap-1">
             <TabsTrigger value="hero" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap flex-shrink-0">
               <Activity className="w-4 h-4 mr-1" />
               Hero
@@ -367,6 +368,7 @@ const AdminDashboard = () => {
               Media Page
             </TabsTrigger>
           </TabsList>
+          </div>
 
           {/* Hero Tab */}
           <TabsContent value="hero">
