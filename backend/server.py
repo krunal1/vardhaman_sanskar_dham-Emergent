@@ -769,7 +769,120 @@ async def update_hero(hero: HeroSectionModel, user: dict = Depends(get_current_u
     )
     return hero.dict()
 
-class TapovanSchoolModel(BaseModel):
+class DonationCategoryModel(BaseModel):
+    name: str
+    nameHindi: str = ""
+    description: str = ""
+    order: int = 0
+    active: bool = True
+
+class RazorpayOrderModel(BaseModel):
+    amount: int  # in paise
+    currency: str = "INR"
+    donations: dict = {}  # category-wise breakdown
+    donor: dict = {}  # donor details
+
+@api_router.get("/donation-categories")
+async def get_donation_categories():
+    cats = await db.donation_categories.find({"active": True}).sort("order", 1).to_list(50)
+    if not cats:
+        # Return defaults if none set
+        defaults = [
+            {"name": "Sarva Sadharana", "nameHindi": "सर्व साधारण", "order": 1, "active": True},
+            {"name": "Sadhu Sadhvi Vaiyavacch", "nameHindi": "साधु साध्वी वैयावच्च", "order": 2, "active": True},
+            {"name": "Sadharmik Bhakti", "nameHindi": "साधर्मिक भक्ति", "order": 3, "active": True},
+            {"name": "Bal Sanskaran", "nameHindi": "बाल संस्करण", "order": 4, "active": True},
+            {"name": "Jeevdaya", "nameHindi": "जीवदया", "order": 5, "active": True},
+            {"name": "Rahat Karya", "nameHindi": "राहत कार्य", "order": 6, "active": True},
+            {"name": "Anukampa", "nameHindi": "अनुकंपा", "order": 7, "active": True},
+        ]
+        await db.donation_categories.insert_many(defaults)
+        cats = await db.donation_categories.find({"active": True}).sort("order", 1).to_list(50)
+    for c in cats:
+        c["_id"] = str(c["_id"])
+    return cats
+
+@api_router.post("/donation-categories")
+async def create_donation_category(cat: DonationCategoryModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    result = await db.donation_categories.insert_one(cat.dict())
+    return {"_id": str(result.inserted_id), **cat.dict()}
+
+@api_router.put("/donation-categories/{cat_id}")
+async def update_donation_category(cat_id: str, cat: DonationCategoryModel, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    await db.donation_categories.update_one({"_id": ObjectId(cat_id)}, {"$set": cat.dict()})
+    return {"message": "Updated"}
+
+@api_router.delete("/donation-categories/{cat_id}")
+async def delete_donation_category(cat_id: str, user: dict = Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    await db.donation_categories.delete_one({"_id": ObjectId(cat_id)})
+    return {"message": "Deleted"}
+
+@api_router.post("/razorpay/create-order")
+async def create_razorpay_order(order_data: RazorpayOrderModel):
+    razorpay_key = os.environ.get("RAZORPAY_KEY_ID")
+    razorpay_secret = os.environ.get("RAZORPAY_KEY_SECRET")
+    if not razorpay_key or not razorpay_secret:
+        raise HTTPException(status_code=500, detail="Razorpay not configured")
+    try:
+        import razorpay
+        client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
+        order = client.order.create({
+            "amount": order_data.amount,
+            "currency": order_data.currency,
+            "receipt": f"vsd_{uuid.uuid4().hex[:8]}",
+            "notes": {
+                "donor_name": order_data.donor.get("name", ""),
+                "donor_email": order_data.donor.get("email", ""),
+                "donor_phone": order_data.donor.get("phone", ""),
+                "categories": str(order_data.donations)
+            }
+        })
+        # Save pending donation record
+        await db.razorpay_orders.insert_one({
+            "order_id": order["id"],
+            "amount": order_data.amount,
+            "donations": order_data.donations,
+            "donor": order_data.donor,
+            "status": "created",
+            "created_at": datetime.utcnow().isoformat()
+        })
+        return {
+            "order_id": order["id"],
+            "amount": order["amount"],
+            "currency": order["currency"],
+            "key": razorpay_key
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Razorpay error: {str(e)}")
+
+@api_router.post("/razorpay/verify-payment")
+async def verify_razorpay_payment(data: dict):
+    razorpay_key = os.environ.get("RAZORPAY_KEY_ID")
+    razorpay_secret = os.environ.get("RAZORPAY_KEY_SECRET")
+    try:
+        import razorpay
+        client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
+        client.utility.verify_payment_signature({
+            "razorpay_order_id": data["razorpay_order_id"],
+            "razorpay_payment_id": data["razorpay_payment_id"],
+            "razorpay_signature": data["razorpay_signature"]
+        })
+        # Update order status
+        await db.razorpay_orders.update_one(
+            {"order_id": data["razorpay_order_id"]},
+            {"$set": {"status": "paid", "payment_id": data["razorpay_payment_id"]}}
+        )
+        return {"success": True, "payment_id": data["razorpay_payment_id"]}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Payment verification failed")
+
+
     name: str
     location: str = ""
     image: str = ""

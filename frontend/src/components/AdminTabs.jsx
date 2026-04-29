@@ -1702,3 +1702,136 @@ export const MediaPageTab = ({ api, handleImageUpload, uploadingImage }) => {
     </div>
   );
 };
+
+// ============ DONATION CATEGORIES TAB ============
+export const DonationCategoriesTab = ({ api }) => {
+  const [cats, setCats] = useState([]);
+  const [form, setForm] = useState({ name: '', nameHindi: '', description: '', order: 0, active: true });
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { fetchCats(); }, []); // eslint-disable-line
+
+  const fetchCats = async () => {
+    try {
+      const { data } = await api.get('/api/donation-categories');
+      setCats(data || []);
+    } catch (e) { toast.error('Failed to load categories'); }
+  };
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      if (editingId) {
+        await api.put(`/api/donation-categories/${editingId}`, form);
+        toast.success('Category updated!');
+      } else {
+        await api.post('/api/donation-categories', form);
+        toast.success('Category added!');
+      }
+      setForm({ name: '', nameHindi: '', description: '', order: cats.length, active: true });
+      setShowForm(false);
+      setEditingId(null);
+      fetchCats();
+    } catch (e) { toast.error('Failed to save'); }
+    finally { setSaving(false); }
+  };
+
+  const deleteCat = async (id) => {
+    if (!window.confirm('Delete this category?')) return;
+    try {
+      await api.delete(`/api/donation-categories/${id}`);
+      toast.success('Deleted');
+      fetchCats();
+    } catch (e) { toast.error('Failed to delete'); }
+  };
+
+  const editCat = (cat) => {
+    setForm({ name: cat.name, nameHindi: cat.nameHindi || '', description: cat.description || '', order: cat.order || 0, active: cat.active !== false });
+    setEditingId(cat._id);
+    setShowForm(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-[#1a3a6b]">Donation Categories</h2>
+          <p className="text-sm text-gray-500 mt-1">Manage the categories shown on the Donate page. Donors can enter amounts per category.</p>
+        </div>
+        <Button onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: '', nameHindi: '', description: '', order: cats.length, active: true }); }}
+          className="bg-[#d97706] hover:bg-[#b45309]">
+          {showForm ? 'Cancel' : '+ Add Category'}
+        </Button>
+      </div>
+
+      {showForm && (
+        <Card className="border-2 border-[#d97706]/30">
+          <CardHeader><CardTitle>{editingId ? 'Edit Category' : 'New Category'}</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">English Name *</label>
+                <input className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="e.g. Jeevdaya"
+                  value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Hindi/Gujarati Name *</label>
+                <input className="w-full px-3 py-2 border rounded-lg text-sm" placeholder="e.g. जीवदया"
+                  value={form.nameHindi} onChange={e => setForm({ ...form, nameHindi: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Display Order</label>
+                <input type="number" className="w-full px-3 py-2 border rounded-lg text-sm"
+                  value={form.order} onChange={e => setForm({ ...form, order: parseInt(e.target.value) || 0 })} />
+              </div>
+              <div className="flex items-end pb-1">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.active} onChange={e => setForm({ ...form, active: e.target.checked })} className="w-4 h-4" />
+                  <span className="text-sm font-medium text-gray-700">Active (visible to donors)</span>
+                </label>
+              </div>
+            </div>
+            <Button onClick={save} disabled={saving || !form.name} className="bg-green-600 hover:bg-green-700 w-full">
+              <Save className="w-4 h-4 mr-2" />{saving ? 'Saving...' : editingId ? 'Update Category' : 'Add Category'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {cats.map((cat, i) => (
+          <Card key={cat._id} className={`hover:shadow-lg transition-shadow ${!cat.active ? 'opacity-50' : ''}`}>
+            <CardContent className="p-5">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <p className="text-lg font-bold text-gray-900">{cat.nameHindi || cat.name}</p>
+                  <p className="text-xs text-gray-500">{cat.name}</p>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded font-semibold ${cat.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {cat.active ? 'Active' : 'Hidden'}
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 mb-3">Order: {cat.order}</p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => editCat(cat)}>
+                  <Edit className="w-3 h-3 mr-1" /> Edit
+                </Button>
+                <Button size="sm" variant="destructive" onClick={() => deleteCat(cat._id)}>Delete</Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {cats.length === 0 && !showForm && (
+        <div className="text-center py-16 border-2 border-dashed rounded-lg text-gray-400">
+          No categories yet. Click "+ Add Category" to create donation categories.
+        </div>
+      )}
+    </div>
+  );
+};

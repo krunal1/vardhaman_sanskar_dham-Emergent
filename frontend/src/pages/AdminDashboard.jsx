@@ -13,7 +13,7 @@ import {
   Plus, Edit, Trash2, Save, User, Users, MessageSquare, DollarSign, Sparkles, GraduationCap
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ProfileTab, UsersTab, MessagesTab, DonationsTab, HeroTab, UpdatesTab, TapovanTab, GurudevTab, MediaPageTab } from '../components/AdminTabs';
+import { ProfileTab, UsersTab, MessagesTab, DonationsTab, HeroTab, UpdatesTab, TapovanTab, GurudevTab, MediaPageTab, DonationCategoriesTab } from '../components/AdminTabs';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -354,6 +354,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="donations" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
               <DollarSign className="w-4 h-4 mr-1" />
               Donation Records
+            </TabsTrigger>
+            <TabsTrigger value="donation-categories" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
+              <DollarSign className="w-4 h-4 mr-1" />
+              Donation Categories
             </TabsTrigger>
             <TabsTrigger value="tapovan" className="data-[state=active]:bg-[#1a3a6b] data-[state=active]:text-white whitespace-nowrap">
               <GraduationCap className="w-4 h-4 mr-1" />
@@ -1252,6 +1256,11 @@ const AdminDashboard = () => {
           <TabsContent value="donations">
             <DonationsTab api={api} />
           </TabsContent>
+          {/* Donation Categories Tab */}
+          <TabsContent value="donation-categories">
+            <DonationCategoriesTab api={api} />
+          </TabsContent>
+
           {/* Tapovan Tab */}
           <TabsContent value="tapovan">
             <TapovanTab api={api} handleImageUpload={handleImageUpload} uploadingImage={uploadingImage} />
