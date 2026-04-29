@@ -102,11 +102,11 @@ const DonatePage = () => {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <button onClick={() => navigate('/')} className="flex items-center gap-3">
             <img src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" alt="VSD" className="h-14 w-auto" />
-            <span className="font-bold text-[#1a3a6b] text-lg hidden sm:block">Vardhman Sanskar Dham</span>
+           {/* <span className="font-bold text-[#1a3a6b] text-lg hidden sm:block">Vardhman Sanskar Dham</span> */}
           </button>
           <div className="flex gap-3">
             <button onClick={() => navigate('/')} className="text-gray-600 hover:text-[#1a3a6b] font-medium text-sm px-4 py-2">HOME</button>
-            <button className="bg-[#1a3a6b] text-white font-bold text-sm px-5 py-2 rounded">DONATION</button>
+            {/*<button className="bg-[#1a3a6b] text-white font-bold text-sm px-5 py-2 rounded">DONATION</button>*/}
           </div>
         </div>
       </header>
@@ -280,7 +280,7 @@ const DonatePage = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 mt-10">
         <div className="max-w-5xl mx-auto px-4 text-center">
-          <img src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" alt="VSD" className="h-14 mx-auto mb-3" />
+         {/* <img src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" alt="VSD" className="h-14 mx-auto mb-3" /> */}
           <p className="text-gray-400 text-sm">&copy; {new Date().getFullYear()} Vardhaman Sanskar Dham. All rights reserved.</p>
         </div>
       </footer>
