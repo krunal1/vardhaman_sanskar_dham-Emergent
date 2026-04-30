@@ -907,6 +907,12 @@ async def verify_razorpay_payment(data: dict):
             "thankYouSent": False
         })
 
+        # Send acknowledgement email (non-blocking)
+        try:
+            await send_donation_email(donor, amount, donations, data["razorpay_payment_id"])
+        except Exception as e:
+            logger.error(f"Email failed (non-critical): {str(e)}")
+
         return {"success": True, "payment_id": data["razorpay_payment_id"]}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Payment verification failed: {str(e)}")
@@ -920,7 +926,125 @@ async def verify_razorpay_payment(data: dict):
     websiteLink: str = ""
     order: int = 0
 
-class TapovanSchoolModel(BaseModel):
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+async def send_donation_email(donor: dict, amount: float, donations: dict, payment_id: str):
+    """Send donation acknowledgement email to donor"""
+    smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+    
+    if not smtp_user or not smtp_pass:
+        logger.warning("SMTP not configured, skipping email")
+        return False
+
+    donor_email = donor.get("email", "")
+    donor_name = donor.get("name", "Donor")
+    donor_pan = donor.get("pan", "")
+    
+    if not donor_email:
+        return False
+
+    # Build category breakdown HTML
+    breakdown_rows = ""
+    for cat, amt in donations.items():
+        breakdown_rows += f"""
+        <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;color:#555;">{cat}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:bold;color:#1a3a6b;">₹{int(amt):,}</td>
+        </tr>"""
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
+    <div style="max-width:600px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+        
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#1a3a6b,#2a4a8b);padding:30px;text-align:center;">
+            <img src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" height="60" style="margin-bottom:10px;" alt="VSD Logo"/>
+            <h1 style="color:white;margin:0;font-size:22px;">Vardhaman Sanskar Dham</h1>
+            <p style="color:#fbbf24;margin:5px 0 0 0;font-size:13px;">Inspired by P.P.P. Chandrashekharvijaiyji M.S.</p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:30px;">
+            <h2 style="color:#1a3a6b;margin-top:0;">🙏 Thank You, {donor_name}!</h2>
+            <p style="color:#555;line-height:1.6;">
+                Your generous donation has been received successfully. May your contribution bring blessings and happiness to you and your family.
+            </p>
+
+            <!-- Amount box -->
+            <div style="background:#f0f7ff;border:2px solid #1a3a6b;border-radius:8px;padding:20px;text-align:center;margin:20px 0;">
+                <p style="margin:0;color:#555;font-size:14px;">Total Donation Amount</p>
+                <p style="margin:5px 0 0 0;color:#1a3a6b;font-size:36px;font-weight:bold;">₹{amount:,.0f}</p>
+            </div>
+
+            <!-- Breakdown -->
+            {"<h3 style='color:#1a3a6b;'>Donation Breakdown</h3><table style='width:100%;border-collapse:collapse;'>" + breakdown_rows + "</table>" if breakdown_rows else ""}
+
+            <!-- Transaction details -->
+            <div style="background:#f9f9f9;border-radius:8px;padding:15px;margin-top:20px;">
+                <h3 style="color:#1a3a6b;margin-top:0;font-size:15px;">Transaction Details</h3>
+                <table style="width:100%;font-size:13px;color:#555;">
+                    <tr><td style="padding:4px 0;"><strong>Payment ID:</strong></td><td style="font-family:monospace;">{payment_id}</td></tr>
+                    <tr><td style="padding:4px 0;"><strong>Donor Name:</strong></td><td>{donor_name}</td></tr>
+                    {"<tr><td style='padding:4px 0;'><strong>PAN Number:</strong></td><td>" + donor_pan + "</td></tr>" if donor_pan else ""}
+                    <tr><td style="padding:4px 0;"><strong>Amount:</strong></td><td>₹{amount:,.0f}</td></tr>
+                </table>
+            </div>
+
+            <!-- 80G Note -->
+            <div style="background:#fffbeb;border-left:4px solid #d97706;padding:15px;margin-top:20px;border-radius:0 8px 8px 0;">
+                <p style="margin:0;color:#92400e;font-size:13px;">
+                    <strong>📄 80G Tax Exemption:</strong> This donation is eligible for 80G tax deduction. 
+                    {"Your PAN (" + donor_pan + ") has been recorded." if donor_pan else "Please share your PAN number for the 80G certificate."}
+                    Contact us at <a href="mailto:vsddomb@gmail.com" style="color:#1a3a6b;">vsddomb@gmail.com</a> or WhatsApp 
+                    <a href="https://wa.me/918080102012" style="color:#1a3a6b;">+91 8080102012</a>.
+                </p>
+            </div>
+
+            <p style="color:#555;margin-top:25px;line-height:1.6;">
+                With gratitude,<br/>
+                <strong style="color:#1a3a6b;">Vardhaman Sanskar Dham</strong><br/>
+                <span style="font-size:13px;color:#888;">Registration No: E-19790 | Mumbai, Maharashtra</span>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background:#1a3a6b;padding:15px;text-align:center;">
+            <p style="color:#94a3b8;margin:0;font-size:12px;">
+                © {datetime.now().year} Vardhaman Sanskar Dham. All rights reserved.
+            </p>
+        </div>
+    </div>
+    </body>
+    </html>
+    """
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"🙏 Donation Acknowledgement - ₹{amount:,.0f} | Vardhaman Sanskar Dham"
+        msg["From"] = f"Vardhaman Sanskar Dham <{smtp_user}>"
+        msg["To"] = donor_email
+        msg["Bcc"] = smtp_user  # Admin gets a copy
+        msg.attach(MIMEText(html, "html"))
+
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, [donor_email, smtp_user], msg.as_string())
+        
+        logger.info(f"Donation email sent to {donor_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Email send failed: {str(e)}")
+        return False
+
+
     name: str
     location: str = ""
     image: str = ""
