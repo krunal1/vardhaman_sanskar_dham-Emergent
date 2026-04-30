@@ -877,7 +877,7 @@ async def reset_password(data: dict):
 
 
 @api_router.get("/test-email")
-async def test_email(user: dict = Depends(get_current_user)):
+async def test_email():
     smtp_host = os.environ.get("SMTP_HOST", "NOT SET")
     smtp_port = os.environ.get("SMTP_PORT", "NOT SET")
     smtp_user = os.environ.get("SMTP_USER", "NOT SET")
