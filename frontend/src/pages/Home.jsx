@@ -280,6 +280,16 @@ const Home = () => {
               );
             })}
           </div>
+          {activities.length > 0 && (
+            <div className="text-center mt-8">
+              <button
+                className="border-2 border-[#1a3a6b] text-[#1a3a6b] hover:bg-[#1a3a6b] hover:text-white px-8 py-3 font-semibold rounded-lg transition-colors inline-flex items-center gap-2"
+                onClick={() => navigate("/activities")}
+              >
+                View All Activities →
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

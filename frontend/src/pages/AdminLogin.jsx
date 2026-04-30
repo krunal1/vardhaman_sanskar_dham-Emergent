@@ -95,6 +95,15 @@ const AdminLogin = () => {
             >
               {loading ? 'Logging in...' : 'Login to Admin Panel'}
             </Button>
+            <div className="text-center mt-3">
+              <button
+                type="button"
+                onClick={() => navigate('/admin/forgot-password')}
+                className="text-sm text-gray-500 hover:text-[#1a3a6b] transition-colors underline"
+              >
+                Forgot password?
+              </button>
+            </div>
           </form>
         </CardContent>
       </Card>

@@ -782,7 +782,100 @@ class RazorpayOrderModel(BaseModel):
     donations: dict = {}  # category-wise breakdown
     donor: dict = {}  # donor details
 
-@api_router.get("/donation-categories")
+@api_router.post("/auth/forgot-password")
+async def forgot_password(data: dict):
+    email = data.get("email", "").lower().strip()
+    user = await db.users.find_one({"email": email})
+    if not user:
+        # Don't reveal if email exists
+        return {"message": "If this email is registered, a reset link has been sent."}
+    
+    # Generate reset token valid for 1 hour
+    token = uuid.uuid4().hex
+    expires = datetime.now(timezone.utc).timestamp() + 3600
+    await db.password_resets.insert_one({
+        "email": email,
+        "token": token,
+        "expires": expires,
+        "used": False
+    })
+
+    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+    reset_link = f"{frontend_url}/admin/reset-password?token={token}"
+
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+    smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
+
+    if smtp_user and smtp_pass:
+        html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:30px;background:#f5f5f5;border-radius:12px;">
+            <div style="background:#1a3a6b;padding:20px;border-radius:8px 8px 0 0;text-align:center;">
+                <h2 style="color:white;margin:0;">Vardhaman Sanskar Dham</h2>
+                <p style="color:#fbbf24;margin:5px 0 0;">Admin Password Reset</p>
+            </div>
+            <div style="background:white;padding:25px;border-radius:0 0 8px 8px;">
+                <p style="color:#555;">You requested a password reset for your admin account.</p>
+                <p style="color:#555;">Click the button below to reset your password. This link expires in <strong>1 hour</strong>.</p>
+                <div style="text-align:center;margin:25px 0;">
+                    <a href="{reset_link}" style="background:#1a3a6b;color:white;padding:12px 30px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
+                        Reset Password
+                    </a>
+                </div>
+                <p style="color:#999;font-size:12px;">If you didn't request this, ignore this email. Your password won't change.</p>
+                <p style="color:#999;font-size:11px;word-break:break-all;">Link: {reset_link}</p>
+            </div>
+        </div>
+        """
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "Admin Password Reset — Vardhaman Sanskar Dham"
+            msg["From"] = f"Vardhaman Sanskar Dham <{smtp_user}>"
+            msg["To"] = email
+            msg.attach(MIMEText(html, "html"))
+
+            def _send():
+                with smtplib.SMTP(smtp_host, smtp_port) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, [email], msg.as_string())
+
+            import asyncio
+            await asyncio.to_thread(_send)
+        except Exception as e:
+            logger.error(f"Reset email failed: {str(e)}")
+
+    return {"message": "If this email is registered, a reset link has been sent."}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(data: dict):
+    token = data.get("token", "")
+    new_password = data.get("password", "")
+
+    if not token or len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Invalid token or password too short")
+
+    reset = await db.password_resets.find_one({"token": token, "used": False})
+    if not reset:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link")
+
+    if datetime.now(timezone.utc).timestamp() > reset["expires"]:
+        raise HTTPException(status_code=400, detail="Reset link has expired. Please request a new one.")
+
+    # Update password
+    await db.users.update_one(
+        {"email": reset["email"]},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    # Mark token as used
+    await db.password_resets.update_one({"token": token}, {"$set": {"used": True}})
+
+    return {"message": "Password reset successfully"}
+
+
 async def get_donation_categories():
     cats = await db.donation_categories.find({"active": True}).sort("order", 1).to_list(50)
     if not cats:
@@ -907,11 +1000,9 @@ async def verify_razorpay_payment(data: dict):
             "thankYouSent": False
         })
 
-        # Send acknowledgement email (non-blocking)
-        try:
-            await send_donation_email(donor, amount, donations, data["razorpay_payment_id"])
-        except Exception as e:
-            logger.error(f"Email failed (non-critical): {str(e)}")
+        # Send acknowledgement email in background (non-blocking)
+        import asyncio
+        asyncio.create_task(send_donation_email(donor, amount, donations, data["razorpay_payment_id"]))
 
         return {"success": True, "payment_id": data["razorpay_payment_id"]}
     except Exception as e:
@@ -1002,7 +1093,7 @@ async def send_donation_email(donor: dict, amount: float, donations: dict, payme
                 <p style="margin:0;color:#92400e;font-size:13px;">
                     <strong>📄 80G Tax Exemption:</strong> This donation is eligible for 80G tax deduction. 
                     {"Your PAN (" + donor_pan + ") has been recorded." if donor_pan else "Please share your PAN number for the 80G certificate."}
-                    Contact us at <a href="mailto:vsddomb@gmail.com" style="color:#1a3a6b;">vsddomb@gmail.com</a> or WhatsApp 
+                    Contact us at <a href="mailto:vsddombivli@gmail.com" style="color:#1a3a6b;">vsddombivli@gmail.com</a> or WhatsApp 
                     <a href="https://wa.me/918080102012" style="color:#1a3a6b;">+91 8080102012</a>.
                 </p>
             </div>
@@ -1033,11 +1124,16 @@ async def send_donation_email(donor: dict, amount: float, donations: dict, payme
         msg["Bcc"] = smtp_user  # Admin gets a copy
         msg.attach(MIMEText(html, "html"))
 
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, [donor_email, smtp_user], msg.as_string())
-        
+        def _send():
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [donor_email, smtp_user], msg.as_string())
+
+        import asyncio
+        await asyncio.to_thread(_send)
         logger.info(f"Donation email sent to {donor_email}")
         return True
     except Exception as e:

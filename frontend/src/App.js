@@ -5,6 +5,8 @@ import { Toaster } from "./components/ui/sonner";
 import Home from "./pages/Home";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import DonatePage from "./pages/DonatePage";
 import ActivitiesPage from "./pages/ActivitiesPage";
 import ActivityDetailPage from "./pages/ActivityDetailPage";
@@ -45,6 +47,8 @@ function App() {
             <Route path="/gurudev" element={<GurudevPage />} />
             <Route path="/media" element={<MediaPage />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+            <Route path="/admin/reset-password" element={<ResetPassword />} />
             <Route
               path="/admin/dashboard"
               element={
