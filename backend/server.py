@@ -876,7 +876,38 @@ async def reset_password(data: dict):
     return {"message": "Password reset successfully"}
 
 
-@api_router.get("/donation-categories/all")
+@api_router.get("/test-email")
+async def test_email(user: dict = Depends(get_current_user)):
+    smtp_host = os.environ.get("SMTP_HOST", "NOT SET")
+    smtp_port = os.environ.get("SMTP_PORT", "NOT SET")
+    smtp_user = os.environ.get("SMTP_USER", "NOT SET")
+    smtp_pass = os.environ.get("SMTP_PASS", "NOT SET")
+    
+    config = {
+        "smtp_host": smtp_host,
+        "smtp_port": smtp_port,
+        "smtp_user": smtp_user,
+        "smtp_pass_length": len(smtp_pass) if smtp_pass != "NOT SET" else 0,
+        "smtp_pass_set": smtp_pass != "NOT SET"
+    }
+    
+    try:
+        import smtplib
+        with smtplib.SMTP(smtp_host, int(smtp_port)) as server:
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(
+                smtp_user,
+                [smtp_user],
+                f"Subject: VSD Test Email\n\nThis is a test email from your VSD backend. SMTP is working!"
+            )
+        return {"success": True, "config": config, "message": "Test email sent successfully to " + smtp_user}
+    except Exception as e:
+        return {"success": False, "config": config, "error": str(e), "error_type": type(e).__name__}
+
+
 async def get_all_donation_categories_admin(user: dict = Depends(get_current_user)):
     cats = await db.donation_categories.find().sort("order", 1).to_list(100)
     for c in cats:
