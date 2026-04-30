@@ -325,20 +325,19 @@ export const MessagesTab = ({ api }) => {
 export const DonationsTab = ({ api }) => {
   const [donations, setDonations] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
   const [newDonation, setNewDonation] = useState({
-    donorName: '', donorEmail: '', donorPhone: '', amount: '', transactionId: '', date: '', status: 'pending'
+    donorName: '', donorEmail: '', donorPhone: '', amount: '', transactionId: '', date: new Date().toISOString().split('T')[0], status: 'paid'
   });
 
-  useEffect(() => {
-    fetchDonations();
-  }, []);
+  useEffect(() => { fetchDonations(); }, []); // eslint-disable-line
 
   const fetchDonations = async () => {
     try {
       const { data } = await api.get('/api/donations/records');
       setDonations(data);
     } catch (error) {
-      toast.error('Failed to fetch donations');
+      toast.error('Failed to fetch donation records');
     }
   };
 
@@ -347,7 +346,7 @@ export const DonationsTab = ({ api }) => {
     try {
       await api.post('/api/donations/records', newDonation);
       toast.success('Donation recorded');
-      setNewDonation({ donorName: '', donorEmail: '', donorPhone: '', amount: '', transactionId: '', date: '', status: 'pending' });
+      setNewDonation({ donorName: '', donorEmail: '', donorPhone: '', amount: '', transactionId: '', date: new Date().toISOString().split('T')[0], status: 'paid' });
       setShowAdd(false);
       fetchDonations();
     } catch (error) {
@@ -355,21 +354,11 @@ export const DonationsTab = ({ api }) => {
     }
   };
 
-  const sendThankYou = async (id) => {
-    try {
-      const { data } = await api.post(`/api/donations/records/${id}/send-thankyou`);
-      toast.success(`Thank you sent to ${data.donor}`);
-      fetchDonations();
-    } catch (error) {
-      toast.error('Failed to send thank you');
-    }
-  };
-
   const deleteDonation = async (id) => {
     if (!window.confirm('Delete this donation record?')) return;
     try {
       await api.delete(`/api/donations/records/${id}`);
-      toast.success('Donation deleted');
+      toast.success('Deleted');
       fetchDonations();
     } catch (error) {
       toast.error('Failed to delete');
@@ -377,62 +366,131 @@ export const DonationsTab = ({ api }) => {
   };
 
   const totalAmount = donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+  const paidCount = donations.filter(d => d.status === 'paid').length;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-[#1a3a6b]">Donation Records</h2>
-          <p className="text-lg text-gray-600">Total: ₹{totalAmount.toLocaleString()}</p>
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-green-600">₹{totalAmount.toLocaleString()}</p>
+          <p className="text-sm text-gray-600">Total Collected</p>
         </div>
-        <Button onClick={() => setShowAdd(!showAdd)} className="bg-[#d97706]">
-          {showAdd ? 'Cancel' : '+ Record Donation'}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-blue-600">{donations.length}</p>
+          <p className="text-sm text-gray-600">Total Donations</p>
+        </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+          <p className="text-2xl font-bold text-amber-600">{paidCount}</p>
+          <p className="text-sm text-gray-600">Successful Payments</p>
+        </div>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-[#1a3a6b]">Donation Records</h2>
+        <Button onClick={() => setShowAdd(!showAdd)} className="bg-[#d97706] hover:bg-[#b45309]">
+          {showAdd ? 'Cancel' : '+ Manual Entry'}
         </Button>
       </div>
 
       {showAdd && (
-        <Card>
-          <CardHeader><CardTitle>Record New Donation</CardTitle></CardHeader>
+        <Card className="border-2 border-[#d97706]/30">
+          <CardHeader><CardTitle>Manual Donation Entry</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={addDonation} className="grid grid-cols-2 gap-4">
-              <input className="px-4 py-2 border rounded-lg" placeholder="Donor Name" value={newDonation.donorName} onChange={(e) => setNewDonation({ ...newDonation, donorName: e.target.value })} required />
-              <input type="email" className="px-4 py-2 border rounded-lg" placeholder="Email" value={newDonation.donorEmail} onChange={(e) => setNewDonation({ ...newDonation, donorEmail: e.target.value })} required />
-              <input className="px-4 py-2 border rounded-lg" placeholder="Phone" value={newDonation.donorPhone} onChange={(e) => setNewDonation({ ...newDonation, donorPhone: e.target.value })} required />
-              <input type="number" className="px-4 py-2 border rounded-lg" placeholder="Amount (₹)" value={newDonation.amount} onChange={(e) => setNewDonation({ ...newDonation, amount: e.target.value })} required />
-              <input className="px-4 py-2 border rounded-lg" placeholder="Transaction ID" value={newDonation.transactionId} onChange={(e) => setNewDonation({ ...newDonation, transactionId: e.target.value })} required />
-              <input type="date" className="px-4 py-2 border rounded-lg" value={newDonation.date} onChange={(e) => setNewDonation({ ...newDonation, date: e.target.value })} required />
-              <Button type="submit" className="col-span-2 bg-green-600">Record Donation</Button>
+              <input className="px-4 py-2 border rounded-lg text-sm" placeholder="Donor Name *" value={newDonation.donorName} onChange={e => setNewDonation({...newDonation, donorName: e.target.value})} required />
+              <input type="email" className="px-4 py-2 border rounded-lg text-sm" placeholder="Email" value={newDonation.donorEmail} onChange={e => setNewDonation({...newDonation, donorEmail: e.target.value})} />
+              <input className="px-4 py-2 border rounded-lg text-sm" placeholder="Phone" value={newDonation.donorPhone} onChange={e => setNewDonation({...newDonation, donorPhone: e.target.value})} />
+              <input type="number" className="px-4 py-2 border rounded-lg text-sm" placeholder="Amount (₹) *" value={newDonation.amount} onChange={e => setNewDonation({...newDonation, amount: e.target.value})} required />
+              <input className="px-4 py-2 border rounded-lg text-sm" placeholder="Transaction ID / Reference" value={newDonation.transactionId} onChange={e => setNewDonation({...newDonation, transactionId: e.target.value})} />
+              <input type="date" className="px-4 py-2 border rounded-lg text-sm" value={newDonation.date} onChange={e => setNewDonation({...newDonation, date: e.target.value})} required />
+              <Button type="submit" className="col-span-2 bg-green-600 hover:bg-green-700">Save Record</Button>
             </form>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid gap-4">
+      <div className="space-y-3">
+        {donations.length === 0 && (
+          <Card><CardContent className="p-12 text-center text-gray-500">No donation records yet. They will appear here after successful Razorpay payments.</CardContent></Card>
+        )}
         {donations.map((d) => (
-          <Card key={d._id} className={d.status === 'confirmed' ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-yellow-500'}>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-bold text-lg">{d.donorName}</h3>
-                  <p className="text-sm text-gray-600">{d.donorEmail} | {d.donorPhone}</p>
-                  <p className="text-2xl font-bold text-green-600 mt-2">₹{parseFloat(d.amount).toLocaleString()}</p>
-                  <p className="text-xs text-gray-500">Transaction: {d.transactionId} | {d.date}</p>
-                  <Badge className={d.status === 'confirmed' ? 'bg-green-500 mt-2' : 'bg-yellow-500 mt-2'}>{d.status}</Badge>
-                </div>
-                <div className="flex gap-2">
-                  {d.status === 'pending' && (
-                    <Button size="sm" onClick={() => sendThankYou(d._id)} className="bg-blue-600">Send Thank You</Button>
+          <Card key={d._id} className={`border-l-4 ${d.status === 'paid' ? 'border-l-green-500' : d.status === 'pending' ? 'border-l-yellow-500' : 'border-l-gray-400'} hover:shadow-md transition-shadow`}>
+            <CardContent className="p-5">
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1">
+                  {/* Top row */}
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <h3 className="font-bold text-lg text-gray-900">{d.donorName}</h3>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${d.status === 'paid' ? 'bg-green-100 text-green-700' : d.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {d.status?.toUpperCase() || 'UNKNOWN'}
+                    </span>
+                    {d.paymentMethod && (
+                      <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">{d.paymentMethod}</span>
+                    )}
+                  </div>
+
+                  {/* Amount + date */}
+                  <div className="flex items-center gap-6 mb-2">
+                    <p className="text-2xl font-bold text-green-600">₹{parseFloat(d.amount || 0).toLocaleString()}</p>
+                    <p className="text-sm text-gray-500">{d.date} {d.time || ''}</p>
+                  </div>
+
+                  {/* Contact */}
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
+                    {d.donorEmail && <span>📧 {d.donorEmail}</span>}
+                    {d.donorPhone && <span>📞 {d.donorPhone}</span>}
+                    {d.donorPan && <span>🪪 PAN: {d.donorPan}</span>}
+                  </div>
+
+                  {/* Transaction IDs */}
+                  <div className="text-xs text-gray-400 space-y-0.5">
+                    {d.transactionId && <p>Payment ID: <code className="bg-gray-100 px-1 rounded">{d.transactionId}</code></p>}
+                    {d.orderId && <p>Order ID: <code className="bg-gray-100 px-1 rounded">{d.orderId}</code></p>}
+                  </div>
+
+                  {/* Expandable breakdown */}
+                  {d.donationBreakdown && Object.keys(d.donationBreakdown).length > 0 && (
+                    <div className="mt-2">
+                      <button
+                        onClick={() => setExpandedId(expandedId === d._id ? null : d._id)}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        {expandedId === d._id ? '▲ Hide breakdown' : '▼ View donation breakdown'}
+                      </button>
+                      {expandedId === d._id && (
+                        <div className="mt-2 bg-gray-50 rounded-lg p-3 text-sm">
+                          <p className="font-semibold text-gray-700 mb-2">Category-wise breakdown:</p>
+                          <div className="space-y-1">
+                            {Object.entries(d.donationBreakdown).map(([cat, amt]) => (
+                              <div key={cat} className="flex justify-between">
+                                <span className="text-gray-600">{cat}</span>
+                                <span className="font-semibold text-gray-800">₹{parseInt(amt).toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
-                  <Button size="sm" variant="destructive" onClick={() => deleteDonation(d._id)}>Delete</Button>
+
+                  {/* Address */}
+                  {d.donorAddress && (
+                    <p className="text-xs text-gray-400 mt-1">📍 {d.donorAddress}</p>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-2 flex-shrink-0">
+                  <Button size="sm" variant="destructive" onClick={() => deleteDonation(d._id)} className="text-xs">Delete</Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
-        {donations.length === 0 && (
-          <Card><CardContent className="p-12 text-center text-gray-500">No donations recorded yet</CardContent></Card>
-        )}
       </div>
+    </div>
+  );
     </div>
   );
 };

@@ -873,16 +873,54 @@ async def verify_razorpay_payment(data: dict):
             "razorpay_payment_id": data["razorpay_payment_id"],
             "razorpay_signature": data["razorpay_signature"]
         })
-        # Update order status
+
+        # Get the original order details
+        order = await db.razorpay_orders.find_one({"order_id": data["razorpay_order_id"]})
+
+        # Update razorpay_orders status
         await db.razorpay_orders.update_one(
             {"order_id": data["razorpay_order_id"]},
             {"$set": {"status": "paid", "payment_id": data["razorpay_payment_id"]}}
         )
+
+        # Save to donation_records (shown in admin panel)
+        donor = order.get("donor", {}) if order else {}
+        amount = (order.get("amount", 0) / 100) if order else 0  # convert paise to rupees
+        donations = order.get("donations", {}) if order else {}
+        now = datetime.now(timezone.utc)
+
+        await db.donation_records.insert_one({
+            "donorName": donor.get("name", "Unknown"),
+            "donorEmail": donor.get("email", ""),
+            "donorPhone": donor.get("phone", ""),
+            "donorPan": donor.get("pan", ""),
+            "donorAddress": f"{donor.get('address1', '')} {donor.get('address2', '')} {donor.get('city', '')} {donor.get('state', '')} {donor.get('pincode', '')}".strip(),
+            "amount": amount,
+            "transactionId": data["razorpay_payment_id"],
+            "orderId": data["razorpay_order_id"],
+            "status": "paid",
+            "paymentMethod": "Razorpay",
+            "donationBreakdown": donations,
+            "date": now.strftime("%Y-%m-%d"),
+            "time": now.strftime("%H:%M:%S"),
+            "created_at": now,
+            "thankYouSent": False
+        })
+
         return {"success": True, "payment_id": data["razorpay_payment_id"]}
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Payment verification failed")
+        raise HTTPException(status_code=400, detail=f"Payment verification failed: {str(e)}")
 
 
+
+    name: str
+    location: str = ""
+    image: str = ""
+    description: str = ""
+    websiteLink: str = ""
+    order: int = 0
+
+class TapovanSchoolModel(BaseModel):
     name: str
     location: str = ""
     image: str = ""
