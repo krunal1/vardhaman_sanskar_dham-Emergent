@@ -16,7 +16,7 @@ const ForgotPassword = () => {
     setLoading(true);
     setError('');
     try {
-      await axios.post(`${BACKEND_URL}/api/auth/forgot-password`, { email });
+      await axios.post(`${BACKEND_URL}/api/auth/forgot-password`, { email }, { timeout: 60000 });
       setSubmitted(true);
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -78,6 +78,11 @@ const ForgotPassword = () => {
             >
               {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
+            {loading && (
+              <p className="text-xs text-gray-400 text-center mt-2">
+                Server is waking up... please wait up to 30 seconds
+              </p>
+            )}
             <button
               type="button"
               onClick={() => navigate('/admin/login')}

@@ -9,16 +9,18 @@ const STATES = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisga
 const DonatePage = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [loadingCats, setLoadingCats] = useState(true);
   const [amounts, setAmounts] = useState({});
-  const [step, setStep] = useState(1); // 1=categories, 2=donor form, 3=success
+  const [step, setStep] = useState(1);
   const [donor, setDonor] = useState({ name: '', phone: '', email: '', pan: '', address1: '', address2: '', country: 'India', state: 'Maharashtra', city: '', pincode: '' });
   const [loading, setLoading] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(null);
 
   useEffect(() => {
-    axios.get(`${BACKEND_URL}/api/donation-categories`)
+    axios.get(`${BACKEND_URL}/api/donation-categories`, { timeout: 60000 })
       .then(res => setCategories(res.data || []))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingCats(false));
   }, []);
 
   const grandTotal = Object.values(amounts).reduce((sum, v) => sum + (parseInt(v) || 0), 0);
@@ -30,6 +32,7 @@ const DonatePage = () => {
   };
 
   const loadRazorpay = () => new Promise(resolve => {
+    if (window.Razorpay) { resolve(true); return; }
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.onload = () => resolve(true);
@@ -57,7 +60,7 @@ const DonatePage = () => {
         currency: 'INR',
         donations: donationsMap,
         donor
-      });
+      }, { timeout: 60000 });
 
       const options = {
         key: order.key,
@@ -76,12 +79,12 @@ const DonatePage = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature
-            });
+            }, { timeout: 60000 });
             setPaymentSuccess(response.razorpay_payment_id);
             setStep(3);
             window.scrollTo(0, 0);
           } catch {
-            alert('Payment verification failed. Please contact us with your payment ID: ' + response.razorpay_payment_id);
+            alert('Payment verification failed. Please contact us with payment ID: ' + response.razorpay_payment_id);
           }
         },
         modal: { ondismiss: () => setLoading(false) }
@@ -90,7 +93,7 @@ const DonatePage = () => {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      alert('Error creating order: ' + (err.response?.data?.detail || err.message));
+      alert('Error: ' + (err.response?.data?.detail || err.message));
     }
     setLoading(false);
   };
@@ -102,11 +105,14 @@ const DonatePage = () => {
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <button onClick={() => navigate('/')} className="flex items-center gap-3">
             <img src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" alt="VSD" className="h-14 w-auto" />
-           {/* <span className="font-bold text-[#1a3a6b] text-lg hidden sm:block">Vardhman Sanskar Dham</span> */}
+            <div className="hidden sm:block text-left">
+              <p className="text-xs text-amber-600 font-medium">Inspired By : P.P.P. Chandrashekharvijayji M.S.</p>
+              <p className="text-base font-bold text-[#1a3a6b]">VARDHMAN SANSKARDHAM</p>
+            </div>
           </button>
           <div className="flex gap-3">
             <button onClick={() => navigate('/')} className="text-gray-600 hover:text-[#1a3a6b] font-medium text-sm px-4 py-2">HOME</button>
-            {/*<button className="bg-[#1a3a6b] text-white font-bold text-sm px-5 py-2 rounded">DONATION</button>*/}
+            <button className="bg-[#1a3a6b] text-white font-bold text-sm px-5 py-2 rounded">DONATION</button>
           </div>
         </div>
       </header>
@@ -117,8 +123,8 @@ const DonatePage = () => {
           <div className="text-6xl mb-4">🙏</div>
           <h2 className="text-3xl font-bold text-green-600 mb-3">Thank You, {donor.name}!</h2>
           <p className="text-gray-600 mb-2">Your donation of <strong>₹{grandTotal.toLocaleString()}</strong> has been received.</p>
-          <p className="text-sm text-gray-500 mb-6">Payment ID: <code className="bg-gray-100 px-2 py-1 rounded">{paymentSuccess}</code></p>
-          <p className="text-gray-600 mb-8">A receipt will be sent to <strong>{donor.email}</strong>. For 80G certificate, contact us at <strong>vsddomb@gmail.com</strong></p>
+          <p className="text-sm text-gray-500 mb-2">Payment ID: <code className="bg-gray-100 px-2 py-1 rounded">{paymentSuccess}</code></p>
+          <p className="text-gray-600 mb-8">A receipt has been sent to <strong>{donor.email}</strong></p>
           <button onClick={() => navigate('/')} className="bg-[#1a3a6b] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#0f2244] transition-colors">Back to Home</button>
         </div>
       )}
@@ -135,24 +141,35 @@ const DonatePage = () => {
             <h2 className="text-xl font-bold text-gray-800 mb-1">Other Donation <span className="text-[#d97706]">Categories</span></h2>
             <hr className="border-[#1a3a6b] border-2 w-16 mb-6" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map(cat => (
-                <div key={cat._id}>
-                  <label className="block text-gray-700 font-medium mb-2">{cat.nameHindi || cat.name}</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₹</span>
-                    <input
-                      type="number"
-                      min="0"
-                      placeholder="0"
-                      value={amounts[cat._id] || ''}
-                      onChange={e => setAmounts({ ...amounts, [cat._id]: e.target.value })}
-                      className="w-full border border-gray-200 rounded-lg pl-8 pr-4 py-3 text-right focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700"
-                    />
+            {loadingCats ? (
+              <div className="text-center py-12">
+                <div className="w-10 h-10 border-4 border-[#1a3a6b] border-t-[#d97706] rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-gray-500 text-sm">Loading categories...</p>
+                <p className="text-gray-400 text-xs mt-1">Server may take up to 30 seconds to wake up on first visit</p>
+              </div>
+            ) : categories.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <p>No donation categories available.</p>
+                <button onClick={() => window.location.reload()} className="mt-3 text-[#1a3a6b] underline text-sm">↻ Retry</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categories.map(cat => (
+                  <div key={cat._id}>
+                    <label className="block text-gray-700 font-medium mb-2">{cat.nameHindi || cat.name}</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₹</span>
+                      <input
+                        type="number" min="0" placeholder="0"
+                        value={amounts[cat._id] || ''}
+                        onChange={e => setAmounts({ ...amounts, [cat._id]: e.target.value })}
+                        className="w-full border border-gray-200 rounded-lg pl-8 pr-4 py-3 text-right focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Total box */}
@@ -165,7 +182,7 @@ const DonatePage = () => {
               </div>
               <button
                 onClick={handleProceed}
-                disabled={grandTotal <= 0}
+                disabled={grandTotal <= 0 || loadingCats}
                 className="w-full bg-[#1a3a6b] hover:bg-[#0f2244] disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition-colors"
               >
                 Proceed
@@ -181,55 +198,58 @@ const DonatePage = () => {
           <button onClick={() => setStep(1)} className="text-[#1a3a6b] hover:underline text-sm mb-6 flex items-center gap-1">← Back to Donation</button>
 
           <form onSubmit={handlePayment}>
-            {/* Donor Details */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
               <h2 className="text-xl font-bold text-gray-800 mb-1">Donation Details</h2>
               <hr className="border-[#1a3a6b] border-2 w-16 mb-6" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { key: 'name', label: 'Full Name (First - Middle - Last)', required: true, full: true },
-                  { key: 'phone', label: 'Phone', required: true, type: 'tel' },
-                  { key: 'email', label: 'Email', required: true, type: 'email' },
-                  { key: 'pan', label: 'PAN No (for 80G receipt)' },
-                  { key: 'address1', label: 'House number and street name', full: true },
-                  { key: 'address2', label: 'Apartment, suite, unit, etc.', full: true },
-                  { key: 'city', label: 'Town / City' },
-                  { key: 'pincode', label: 'Postcode / ZIP' },
-                ].map(field => (
-                  <div key={field.key} className={field.full ? 'sm:col-span-2' : ''}>
-                    <input
-                      type={field.type || 'text'}
-                      placeholder={field.label}
-                      required={field.required}
-                      value={donor[field.key]}
-                      onChange={e => setDonor({ ...donor, [field.key]: e.target.value })}
-                      className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400"
-                    />
-                  </div>
-                ))}
-
-                <div>
-                  <select value={donor.country} onChange={e => setDonor({ ...donor, country: e.target.value })}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700">
-                    <option value="India">India</option>
-                    <option value="USA">United States</option>
-                    <option value="UK">United Kingdom</option>
-                    <option value="Canada">Canada</option>
-                    <option value="Australia">Australia</option>
-                    <option value="Other">Other</option>
-                  </select>
+                <div className="sm:col-span-2">
+                  <input type="text" placeholder="Full Name (First - Middle - Last) *" required value={donor.name}
+                    onChange={e => setDonor({ ...donor, name: e.target.value })}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400" />
                 </div>
-                <div>
-                  <select value={donor.state} onChange={e => setDonor({ ...donor, state: e.target.value })}
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700">
-                    {STATES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                <input type="tel" placeholder="Phone *" required value={donor.phone}
+                  onChange={e => setDonor({ ...donor, phone: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400" />
+                <input type="email" placeholder="Email *" required value={donor.email}
+                  onChange={e => setDonor({ ...donor, email: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400" />
+                <input type="text" placeholder="PAN No (for 80G receipt)" value={donor.pan}
+                  onChange={e => setDonor({ ...donor, pan: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400" />
+                <div className="sm:col-span-2">
+                  <input type="text" placeholder="House number and street name" value={donor.address1}
+                    onChange={e => setDonor({ ...donor, address1: e.target.value })}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400" />
                 </div>
+                <div className="sm:col-span-2">
+                  <input type="text" placeholder="Apartment, suite, unit, etc." value={donor.address2}
+                    onChange={e => setDonor({ ...donor, address2: e.target.value })}
+                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400" />
+                </div>
+                <select value={donor.country} onChange={e => setDonor({ ...donor, country: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700">
+                  <option value="India">India</option>
+                  <option value="USA">United States</option>
+                  <option value="UK">United Kingdom</option>
+                  <option value="Canada">Canada</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Other">Other</option>
+                </select>
+                <select value={donor.state} onChange={e => setDonor({ ...donor, state: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700">
+                  {STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <input type="text" placeholder="Town / City" value={donor.city}
+                  onChange={e => setDonor({ ...donor, city: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400" />
+                <input type="text" placeholder="Postcode / ZIP" value={donor.pincode}
+                  onChange={e => setDonor({ ...donor, pincode: e.target.value })}
+                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b] text-gray-700 placeholder-gray-400" />
               </div>
             </div>
 
-            {/* Donation Summary */}
+            {/* Summary */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">Your Donation Amount</h2>
               <table className="w-full text-sm">
@@ -256,20 +276,14 @@ const DonatePage = () => {
 
             {/* Payment */}
             <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-              <div className="flex items-center gap-3 mb-3">
-                <input type="radio" checked readOnly className="w-4 h-4 text-[#1a3a6b]" />
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-[#1a3a6b]">Credit Card/Debit Card/NetBanking</span>
-                  <img src="https://razorpay.com/favicon.ico" alt="Razorpay" className="w-5 h-5" />
-                  <span className="text-sm text-gray-500">Pay by Razorpay — Cards, Netbanking, Wallet & UPI</span>
-                </div>
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
+                <input type="radio" checked readOnly className="w-4 h-4" />
+                <span className="font-semibold text-[#1a3a6b]">Credit Card/Debit Card/NetBanking</span>
+                <span className="text-sm text-gray-500">Pay by Razorpay — Cards, Netbanking, Wallet & UPI</span>
               </div>
               <p className="text-gray-600 mb-4">Pay securely by Credit or Debit card or Internet Banking through Razorpay.</p>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-[#d97706] hover:bg-[#b45309] disabled:bg-gray-300 text-white font-bold px-8 py-3 rounded-lg transition-colors"
-              >
+              <button type="submit" disabled={loading}
+                className="bg-[#d97706] hover:bg-[#b45309] disabled:bg-gray-300 text-white font-bold px-8 py-3 rounded-lg transition-colors">
                 {loading ? 'Processing...' : 'Donate Us'}
               </button>
             </div>
@@ -280,7 +294,7 @@ const DonatePage = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-8 mt-10">
         <div className="max-w-5xl mx-auto px-4 text-center">
-         {/* <img src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" alt="VSD" className="h-14 mx-auto mb-3" /> */}
+          <img src="https://customer-assets.emergentagent.com/job_sanskar-dham/artifacts/ed94r76r_VSD_PNG_LOGO.png" alt="VSD" className="h-14 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">&copy; {new Date().getFullYear()} Vardhaman Sanskar Dham. All rights reserved.</p>
         </div>
       </footer>
