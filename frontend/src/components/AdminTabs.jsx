@@ -491,8 +491,6 @@ export const DonationsTab = ({ api }) => {
       </div>
     </div>
   );
-    </div>
-  );
 };
 
 export const HeroTab = ({ api, handleImageUpload, uploadingImage }) => {
