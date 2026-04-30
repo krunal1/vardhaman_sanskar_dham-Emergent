@@ -491,6 +491,8 @@ export const DonationsTab = ({ api }) => {
       </div>
     </div>
   );
+    </div>
+  );
 };
 
 export const HeroTab = ({ api, handleImageUpload, uploadingImage }) => {
@@ -1771,7 +1773,7 @@ export const DonationCategoriesTab = ({ api }) => {
 
   const fetchCats = async () => {
     try {
-      const { data } = await api.get('/api/donation-categories');
+      const { data } = await api.get('/api/donation-categories/all');
       setCats(data || []);
     } catch (e) { toast.error('Failed to load categories'); }
   };

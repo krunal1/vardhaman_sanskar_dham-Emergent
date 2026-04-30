@@ -876,6 +876,14 @@ async def reset_password(data: dict):
     return {"message": "Password reset successfully"}
 
 
+@api_router.get("/donation-categories/all")
+async def get_all_donation_categories_admin(user: dict = Depends(get_current_user)):
+    cats = await db.donation_categories.find().sort("order", 1).to_list(100)
+    for c in cats:
+        c["_id"] = str(c["_id"])
+    return cats
+
+@api_router.get("/donation-categories")
 async def get_donation_categories():
     cats = await db.donation_categories.find({"active": True}).sort("order", 1).to_list(50)
     if not cats:
@@ -1009,14 +1017,6 @@ async def verify_razorpay_payment(data: dict):
         raise HTTPException(status_code=400, detail=f"Payment verification failed: {str(e)}")
 
 
-
-    name: str
-    location: str = ""
-    image: str = ""
-    description: str = ""
-    websiteLink: str = ""
-    order: int = 0
-
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -1141,6 +1141,7 @@ async def send_donation_email(donor: dict, amount: float, donations: dict, payme
         return False
 
 
+class TapovanSchoolModel(BaseModel):
     name: str
     location: str = ""
     image: str = ""
